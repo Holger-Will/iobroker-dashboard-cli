@@ -111,7 +111,7 @@ export class BaseCommand {
             examples: this.examples
         });
         
-        this.info(`📖 Help for: ${this.name}`);
+        this.info(`[HELP] Help for: ${this.name}`);
         if (this.aliases.length > 0) {
             this.info(`Aliases: ${this.aliases.join(', ')}`);
         }
@@ -150,7 +150,7 @@ export class BaseCommand {
     async reload() {
         const reloadResult = await this.dashboard.configManager.load();
         if (reloadResult.success) {
-            this.dashboard.connectElementsToClient();
+            await this.dashboard.connectElementsToClient();
             this.render();
         }
         return reloadResult.success;

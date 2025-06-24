@@ -289,17 +289,18 @@ Complete redesign of the command system using flag-based arguments instead of po
 - **Command Mode:** Full-screen output window for detailed work
 
 ### 3. ⌨️ **Dashboard Hotkeys**
-- **Number keys [1-9,0]:** Quick load dashboard files
-- **Configuration:** Use `/set` command to assign dashboards to keys
+- **Alt+Number keys [Alt+1-9,0]:** Quick load dashboard files
+- **Configuration:** Automatically loads dashboard1.json - dashboard9.json and dashboard0.json
 - **Examples:**
   ```bash
-  /set -n hotkey.1 -v "main-dashboard.json"      # Press '1' to load
-  /set -n hotkey.2 -v "solar-system.json"       # Press '2' to load  
-  /set -n hotkey.0 -v "debug-dashboard.json"    # Press '0' to load
+  # Create dashboard files to use with hotkeys
+  /save -f "dashboard1.json"      # Press Alt+1 to load
+  /save -f "dashboard2.json"      # Press Alt+2 to load  
+  /save -f "dashboard0.json"      # Press Alt+0 to load
   ```
 
 ### 4. 🖱️ **Smart Key Handling**
-- **Numbers (1-9,0):** Load dashboards when not typing
+- **Alt+Numbers (1-9,0):** Load dashboards (Alt modifier prevents conflicts during typing)
 - **ESC:** Toggle mode when not typing, cancel input when typing
 - **Up/Down:** Command history when typing, scroll when not typing
 

@@ -21,8 +21,8 @@ export class StatusCommand extends BaseCommand {
         try {
             const status = this.tools.getStatus();
             
-            this.info('📊 Dashboard Status:');
-            this.info(`  Connection: ${this.dashboard.connected ? '✅ Connected' : '❌ Disconnected'}`);
+            this.info('[STATUS] Dashboard Status:');
+            this.info(`  Connection: ${this.dashboard.connected ? '[CONNECTED]' : '[DISCONNECTED]'}`);
             this.info(`  ioBroker URL: ${this.config.iobrokerUrl}`);
             this.info(`  Groups: ${status.groups}`);
             this.info(`  Total Elements: ${status.totalElements}`);

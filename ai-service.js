@@ -20,7 +20,7 @@ class AIService {
         const apiKey = process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY;
         
         if (!apiKey) {
-            console.log('💡 AI features disabled - set ANTHROPIC_API_KEY environment variable to enable AI assistance');
+            console.log('[AI] AI features disabled - set ANTHROPIC_API_KEY environment variable to enable AI assistance');
             return;
         }
 
@@ -29,7 +29,7 @@ class AIService {
                 apiKey: apiKey
             });
             this.initialized = true;
-            console.log('🤖 AI assistant enabled');
+            console.log('[AI] AI assistant enabled');
         } catch (error) {
             console.error('Failed to initialize AI service:', error.message);
         }
@@ -387,23 +387,50 @@ INSTRUCTIONS:
 1. Understand the user's intent for dashboard management
 2. If they mention specific state IDs, try to validate them if connected
 3. Use state metadata to suggest the best element type automatically
-4. If they want to execute commands, suggest specific commands
+4. If they want to execute commands, suggest specific commands using the NEW FLAG SYNTAX
 5. If they ask questions, provide helpful information about their dashboard
 6. Be concise and practical
-7. When suggesting commands, format them clearly
+7. When suggesting commands, format them clearly with the proper flag syntax
 8. You can suggest multiple commands if needed
 9. Use MCP tools directly when you need to search, get states, or perform ioBroker operations
 10. For queries like "search for temperature sensors" or "what lights are available", use MCP tools first
 
-CRITICAL: add-state command format is: add-state <group> <title> <stateId> [type]
-Example: add-state "Temperatures" "Außentemperatur" modbus.2.holdingRegisters._Aussentemparatur gauge
-NOT: add-state modbus.2.holdingRegisters._Aussentemparatur "Temperatures" gauge "Außentemperatur"
+CRITICAL - NEW FLAG-BASED COMMAND SYNTAX:
+All commands now use flag-based syntax with / prefix:
+
+CREATE GROUPS:
+- /add -c -g "Group Name"
+
+ADD ELEMENTS:
+- /add -g "Group Name" -n "Element Name" -s "state.id" -t "type"
+
+RENAME OPERATIONS:
+- /rename -o "Old Name" -n "New Name"                    (rename group)
+- /rename -o "Old Name" -n "New Name" -g "Group"        (rename element in group)
+- /rename -o "Old Name" -n "New Name" -g               (search all groups)
+
+THEME MANAGEMENT:
+- /theme -l                                            (list themes)
+- /theme -s "theme-name"                              (switch theme)
+- /theme --save "custom-name"                         (save custom theme)
+
+OTHER COMMANDS:
+- /ls -g                                              (list groups)
+- /ls -e "Group"                                      (list elements in group)
+- /save -f "filename"                                 (save dashboard)
+- /load -f "filename"                                 (load dashboard)
+
+EXAMPLES:
+- /add -c -g "Solar System"
+- /add -g "Solar System" -n "PV Power" -s "solar.power" -t "gauge"
+- /rename -o "Solar" -n "Energy Management"
+- /theme -s "matrix"
 
 RESPONSE FORMAT:
 Provide a natural language explanation, and if commands are needed, list them clearly like:
 Commands to run:
-- command1 arg1 arg2
-- command2 arg1 arg2
+- /add -c -g "Group Name"
+- /add -g "Group Name" -n "Element" -s "state.id" -t "gauge"
 
 User's dashboard context: ${context.groups.length} groups, ${context.status.totalElements} total elements, connected: ${context.connected}`;
     }
@@ -452,7 +479,7 @@ User's dashboard context: ${context.groups.length} groups, ${context.status.tota
             const lines = aiResult.explanation.split('\n').filter(line => line.trim());
             for (const line of lines) {
                 if (line.trim()) {
-                    this.dashboard.addInfoMessage(`🤖 ${line.trim()}`);
+                    this.dashboard.addInfoMessage(`[AI] ${line.trim()}`);
                     await this.sleep(100); // Small delay between lines
                 }
             }
@@ -461,29 +488,35 @@ User's dashboard context: ${context.groups.length} groups, ${context.status.tota
         // Execute suggested commands with delays
         if (aiResult.commands && aiResult.commands.length > 0) {
             await this.sleep(200); // Pause before showing command execution
-            this.dashboard.addInfoMessage(`🔧 Executing ${aiResult.commands.length} command(s):`);
+            this.dashboard.addInfoMessage(`[AI] Executing ${aiResult.commands.length} command(s):`);
             await this.sleep(300);
             
             for (const command of aiResult.commands) {
                 this.dashboard.addInfoMessage(`> ${command}`);
                 await this.sleep(200); // Small delay to show the command before executing
                 
-                // Parse and execute the command (handle quoted arguments)
-                const args = this.parseCommandLine(command);
-                const cmd = args[0].toLowerCase();
-                const commandArgs = args.slice(1);
-                
-                // Execute through command registry
-                const handled = await this.dashboard.commands.execute(cmd, commandArgs);
-                
-                if (!handled) {
-                    this.dashboard.addErrorMessage(`Unknown command from AI: ${cmd}`);
+                // Handle new flag-based commands with / prefix
+                if (command.startsWith('/')) {
+                    // Use the main command processing logic for flag-based commands
+                    await this.dashboard.processSlashCommand(command);
+                } else {
+                    // Legacy fallback - parse and execute the command (handle quoted arguments)
+                    const args = this.parseCommandLine(command);
+                    const cmd = args[0].toLowerCase();
+                    const commandArgs = args.slice(1);
+                    
+                    // Execute through command registry
+                    const handled = await this.dashboard.commands.execute(cmd, commandArgs);
+                    
+                    if (!handled) {
+                        this.dashboard.addErrorMessage(`Unknown command from AI: ${cmd}`);
+                    }
                 }
                 
                 await this.sleep(300); // Pause between commands
             }
         } else if (!aiResult.explanation) {
-            this.dashboard.addInfoMessage(`🤖 ${aiResult.response}`);
+            this.dashboard.addInfoMessage(`[AI] ${aiResult.response}`);
         }
     }
 

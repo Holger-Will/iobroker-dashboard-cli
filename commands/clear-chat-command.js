@@ -30,7 +30,7 @@ export class ClearChatCommand extends BaseCommand {
     async execute(args) {
         if (this.dashboard.ai && this.dashboard.ai.isAvailable()) {
             this.dashboard.ai.clearChatHistory();
-            this.dashboard.addSuccessMessage('🧹 Chat history cleared');
+            this.dashboard.addSuccessMessage('[CLEARED] Chat history cleared');
         } else {
             this.dashboard.addErrorMessage('AI not available');
         }

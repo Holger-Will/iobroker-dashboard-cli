@@ -14,21 +14,33 @@ export class SaveCommand extends BaseCommand {
     }
 
     get usage() {
-        return 'save [filename]';
+        return '/save [-f <filename>] [-d]';
+    }
+
+    get flagSchema() {
+        return {
+            knownFlags: ['f', 'd', 'h'],
+            flags: {
+                f: { type: 'string', description: 'Save to specific filename' },
+                d: { type: 'boolean', description: 'Save as default configuration' },
+                h: { type: 'boolean', description: 'Show help' }
+            }
+        };
     }
 
     get examples() {
         return [
-            'save                    # Save to default configuration',
-            'save dashboard1         # Save as dashboard1.json (auto-adds .json)',
-            'save dashboard1.json    # Save to specific file',
-            'sv backup              # Save as backup.json (shortcut)'
+            '/save                     # Save to current configuration',
+            '/save -f "dashboard1"     # Save as dashboard1.json',
+            '/save -f "backup.json"    # Save to specific file',
+            '/save -d                  # Save as default configuration',
+            '/save -f "new" -d         # Save as new.json and set as default'
         ];
     }
 
-    async run(args) {
-        const parsed = this.parseArgs(args);
-        let filename = parsed.params[0]; // Optional filename
+    async run(parsedArgs) {
+        let filename = parsedArgs.getFlag('f') || null; // null for current config
+        const setDefault = parsedArgs.hasFlag('d');
         
         // Auto-append .json extension if not present
         if (filename && !filename.endsWith('.json')) {

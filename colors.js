@@ -217,6 +217,9 @@ export const COLOR_SCHEMES = {
 // Current active theme (defaults to default scheme)
 export let THEMES = { ...COLOR_SCHEMES.default };
 
+// Current theme name tracking
+export let currentThemeName = 'default';
+
 // Function to apply a color scheme
 export function applyColorScheme(schemeName) {
     if (!COLOR_SCHEMES[schemeName]) {
@@ -226,7 +229,109 @@ export function applyColorScheme(schemeName) {
     
     // Replace all THEMES properties with the new scheme
     Object.assign(THEMES, COLOR_SCHEMES[schemeName]);
+    currentThemeName = schemeName;
     return true;
+}
+
+// Get current theme name
+export function getCurrentTheme() {
+    return currentThemeName;
+}
+
+// Custom theme storage
+let customThemes = {};
+
+// Save a custom theme
+export function saveCustomTheme(name, themeData) {
+    if (!name || typeof name !== 'string') {
+        throw new Error('Theme name must be a non-empty string');
+    }
+    
+    if (!themeData || typeof themeData !== 'object') {
+        throw new Error('Theme data must be an object');
+    }
+    
+    // Validate theme data has required properties
+    const requiredProps = ['active', 'inactive', 'border', 'title', 'caption', 'value', 'unit', 'prompt', 'input'];
+    for (const prop of requiredProps) {
+        if (!(prop in themeData)) {
+            throw new Error(`Missing required theme property: ${prop}`);
+        }
+    }
+    
+    customThemes[name] = { ...themeData };
+    return true;
+}
+
+// Load a custom theme
+export function loadCustomTheme(name) {
+    if (!customThemes[name]) {
+        return null;
+    }
+    return { ...customThemes[name] };
+}
+
+// Get all available themes (built-in + custom)
+export function getAllThemes() {
+    return {
+        builtin: Object.keys(COLOR_SCHEMES),
+        custom: Object.keys(customThemes)
+    };
+}
+
+// Apply any theme (built-in or custom)
+export function applyTheme(themeName) {
+    // Try built-in schemes first
+    if (COLOR_SCHEMES[themeName]) {
+        return applyColorScheme(themeName);
+    }
+    
+    // Try custom themes
+    const customTheme = loadCustomTheme(themeName);
+    if (customTheme) {
+        Object.assign(THEMES, customTheme);
+        currentThemeName = themeName;
+        return true;
+    }
+    
+    return false;
+}
+
+// Save current theme as custom theme
+export function saveCurrentThemeAs(name) {
+    if (!name || typeof name !== 'string') {
+        throw new Error('Theme name must be a non-empty string');
+    }
+    
+    return saveCustomTheme(name, { ...THEMES });
+}
+
+// Delete a custom theme
+export function deleteCustomTheme(name) {
+    if (customThemes[name]) {
+        delete customThemes[name];
+        return true;
+    }
+    return false;
+}
+
+// Export custom themes data
+export function exportCustomThemes() {
+    return JSON.stringify(customThemes, null, 2);
+}
+
+// Import custom themes data
+export function importCustomThemes(jsonData) {
+    try {
+        const imported = JSON.parse(jsonData);
+        if (typeof imported === 'object' && imported !== null) {
+            customThemes = { ...customThemes, ...imported };
+            return true;
+        }
+    } catch (error) {
+        throw new Error('Invalid JSON data for theme import');
+    }
+    return false;
 }
 
 // Function to get available color scheme names
@@ -286,19 +391,19 @@ export function colorizeIndicator(active, options = {}) {
     return colorize(char, color);
 }
 
-// Color switches
+// Color switches with block characters
 export function colorizeSwitch(active, options = {}) {
     const {
-        activeChar = '⬜',
-        inactiveChar = '⬛',
+        activeDisplay = '░░█',  // ON: light blocks with solid end
+        inactiveDisplay = '█░░', // OFF: solid block with light end
         activeColor = THEMES.active,
         inactiveColor = THEMES.inactive
     } = options;
     
-    const char = active ? activeChar : inactiveChar;
+    const display = active ? activeDisplay : inactiveDisplay;
     const color = active ? activeColor : inactiveColor;
     
-    return colorize(char, color);
+    return colorize(display, color);
 }
 
 // Color gauge values based on thresholds
@@ -385,5 +490,14 @@ export default {
     colorizePower,
     colorizeSystemState,
     applyColorScheme,
-    getAvailableSchemes
+    getAvailableSchemes,
+    getCurrentTheme,
+    saveCustomTheme,
+    loadCustomTheme,
+    getAllThemes,
+    applyTheme,
+    saveCurrentThemeAs,
+    deleteCustomTheme,
+    exportCustomThemes,
+    importCustomThemes
 };

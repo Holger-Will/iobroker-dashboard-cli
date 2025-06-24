@@ -117,8 +117,13 @@ export class CommandFlagParser {
             const token = tokens[i];
             
             if (token.startsWith('-')) {
-                // This is a flag
-                const flagName = token.substring(1);
+                // This is a flag - handle both single (-f) and double (--flag) dash
+                let flagName;
+                if (token.startsWith('--')) {
+                    flagName = token.substring(2);
+                } else {
+                    flagName = token.substring(1);
+                }
                 
                 if (!flagName) {
                     this.errors.push('Empty flag name');

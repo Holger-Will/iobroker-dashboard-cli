@@ -47,7 +47,7 @@ export class HelpCommand extends BaseCommand {
             return;
         }
 
-        this.info(`📖 Help for: ${command.name}`);
+        this.info(`[HELP] Help for: ${command.name}`);
         this.info(`Description: ${command.description}`);
         this.info(`Usage: ${command.usage}`);
         
@@ -65,7 +65,7 @@ export class HelpCommand extends BaseCommand {
 
     showGeneralHelp() {
         if (this.dashboard.isOnboarding && this.dashboard.onboardingStep === 'connection') {
-            this.info('📖 Connection setup commands:');
+            this.info('[HELP] Connection setup commands:');
             this.dashboard.showCommandsInColumns([
                 ['set-url <ip:port>', 'Set ioBroker URL'],
                 ['test-connection', 'Test connection to ioBroker'],
@@ -74,7 +74,7 @@ export class HelpCommand extends BaseCommand {
                 ['exit', 'Exit without saving']
             ]);
         } else if (this.dashboard.isOnboarding && this.dashboard.onboardingStep === 'dashboard') {
-            this.info('📖 Dashboard setup commands:');
+            this.info('[HELP] Dashboard setup commands:');
             this.dashboard.showCommandsInColumns([
                 ['add-group <name> (ag)', 'Create a new group'],
                 ['add-state <group> <type> <title> <stateId> (as)', 'Add element to monitor state'],
@@ -83,12 +83,12 @@ export class HelpCommand extends BaseCommand {
                 ['quit (q)', 'Exit without saving']
             ]);
             this.info('');
-            this.info('💡 Quick start:');
+            this.info('[QUICKSTART] Quick start:');
             this.info('  1. ag "Solar System"                    # Create a group');
             this.info('  2. as Solar gauge "PV Power" solar.power # Add a gauge');
             this.info('  3. sv                                    # Save dashboard');
         } else {
-            this.info('📖 Available commands:');
+            this.info('[HELP] Available commands:');
             
             // Get all registered commands
             const allCommands = this.dashboard.commands.getAllCommands();
@@ -108,7 +108,7 @@ export class HelpCommand extends BaseCommand {
             this.dashboard.showCommandsInColumns([...registryCommands, ...builtInCommands]);
             
             this.info('');
-            this.info('💡 Tips:');
+            this.info('[TIPS] Tips:');
             this.info('  • Use arrow keys ↑↓ to scroll through messages');
             this.info('  • Use Tab to navigate interactive elements (buttons, switches)');
             this.info('  • Press Space to activate selected interactive element');
@@ -119,7 +119,7 @@ export class HelpCommand extends BaseCommand {
             
             if (this.dashboard.ai && this.dashboard.ai.isAvailable()) {
                 this.info('');
-                this.info('🤖 AI Assistant:');
+                this.info('[AI] AI Assistant:');
                 this.info('  • Ask questions in natural language');
                 this.info('  • Example: "add a temperature sensor to my living room"');
                 this.info('  • Example: "add javascript.0.temp.bedroom to my bedroom group"');
@@ -128,7 +128,7 @@ export class HelpCommand extends BaseCommand {
                 this.info('  • Tip: Mention specific state IDs for automatic type detection');
             } else {
                 this.info('');
-                this.info('🤖 AI Assistant (disabled):');
+                this.info('[AI] AI Assistant (disabled):');
                 this.info('  • Set ANTHROPIC_API_KEY to enable natural language commands');
             }
         }

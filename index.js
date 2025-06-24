@@ -61,7 +61,7 @@ class IobrkerDashboard {
     }
 
     async initialize() {
-        console.log('🚀 Initializing ioBroker Dashboard...');
+        console.log('[INIT] Initializing ioBroker Dashboard...');
 
         // Create ioBroker client
         this.client = new IoBrokerClient({
@@ -107,26 +107,28 @@ class IobrkerDashboard {
         // Set up event handlers
         this.setupEventHandlers();
 
-        console.log('✅ Dashboard initialized');
+        console.log('[SUCCESS] Dashboard initialized');
     }
 
     setupEventHandlers() {
         // ioBroker client events
         this.client.on('connected', () => {
             this.connected = true;
-            console.log('✅ Connected to ioBroker');
+            this.addSuccessMessage('Connected to ioBroker');
             this.updatePrompt();
             this.renderDashboard();
         });
 
         this.client.on('disconnected', (reason) => {
             this.connected = false;
-            console.log('❌ Disconnected from ioBroker:', reason);
+            this.addErrorMessage(`Disconnected from ioBroker: ${reason}`);
             this.updatePrompt();
+            this.renderDashboard();
         });
 
         this.client.on('error', (error) => {
-            console.error('💥 ioBroker Error:', error.message);
+            this.addErrorMessage(`ioBroker Error: ${error.message}`);
+            this.renderDashboard();
         });
 
         // Layout changes
@@ -139,15 +141,15 @@ class IobrkerDashboard {
         // Config manager events
         this.configManager.on('saved', (data) => {
             if (this.running) {
-                this.addSuccessMessage(`💾 Configuration saved: ${data.filename}`);
+                this.addSuccessMessage(`[SAVED] Configuration saved: ${data.filename}`);
             }
         });
 
-        this.configManager.on('loaded', (data) => {
+        this.configManager.on('loaded', async (data) => {
             if (this.running) {
-                this.addInfoMessage(`📥 Configuration loaded: ${data.filename}`);
+                this.addInfoMessage(`[LOADED] Configuration loaded: ${data.filename}`);
             }
-            this.connectElementsToClient();
+            await this.connectElementsToClient();
             this.renderDashboard();
         });
 
@@ -207,7 +209,7 @@ class IobrkerDashboard {
     async start() {
         if (this.running) return;
 
-        console.log('🔌 Connecting to ioBroker...');
+        console.log('[CONNECT] Connecting to ioBroker...');
         
         try {
             await this.client.connect();
@@ -224,33 +226,33 @@ class IobrkerDashboard {
         }
 
         // Check if this is first run (no configuration exists)
-        console.log('📂 Checking for existing configuration...');
+        console.log('[CONFIG] Checking for existing configuration...');
         const hasExistingConfig = await this.checkForExistingConfiguration();
         
         if (!hasExistingConfig) {
-            console.log('🆕 First run detected - starting onboarding...');
+            console.log('[FIRST RUN] First run detected - starting onboarding...');
             this.isOnboarding = true;
             this.onboardingStep = 'socketio-url';
         } else {
             // Try to load last used layout
-            console.log('📂 Loading dashboard layout...');
+            console.log('[LOAD] Loading dashboard layout...');
             const lastUsedDashboard = await this.configManager.getDefaultDashboard();
             const loadResult = await this.configManager.load(lastUsedDashboard);
             
             if (loadResult.success) {
                 const elementCount = this.layout.groups.reduce((sum, g) => sum + g.elements.length, 0);
-                console.log(`✅ Loaded dashboard "${loadResult.filename}" with ${this.layout.groups.length} groups and ${elementCount} elements`);
+                console.log(`[SUCCESS] Loaded dashboard "${loadResult.filename}" with ${this.layout.groups.length} groups and ${elementCount} elements`);
                 
                 // If this was the last used dashboard, mention it
                 if (lastUsedDashboard !== this.configManager.config.defaultConfig) {
-                    console.log(`📌 Continuing from last session (${lastUsedDashboard})`);
+                    console.log(`[CONTINUE] Continuing from last session (${lastUsedDashboard})`);
                 }
             } else {
-                console.log('⚠️  Could not load dashboard, but configuration exists');
+                console.log('[WARNING] Could not load dashboard, but configuration exists');
             }
         }
 
-        this.connectElementsToClient();
+        await this.connectElementsToClient();
 
         // Subscribe to state changes
         this.client.subscribeStates('*');
@@ -260,7 +262,7 @@ class IobrkerDashboard {
         if (this.isOnboarding) {
             await this.onboarding.startOnboarding();
         } else {
-            this.addInfoMessage(`🎯 Dashboard loaded! Type "/help" for commands.`);
+            this.addInfoMessage(`[READY] Dashboard loaded! Type "/help" for commands.`);
             this.renderDashboard();
         }
     }
@@ -268,8 +270,8 @@ class IobrkerDashboard {
     async checkForExistingConfiguration() {
         try {
             // Check for any dashboard files or settings
-            const dashboards = await this.configManager.listDashboards();
-            if (dashboards.length > 0) {
+            const result = await this.configManager.listConfigs();
+            if (result.success && result.configs.length > 0) {
                 return true;
             }
             
@@ -319,8 +321,10 @@ class IobrkerDashboard {
         await this.configManager.save();
     }
 
-    connectElementsToClient() {
+    async connectElementsToClient() {
         // Connect all elements to the ioBroker client for live updates
+        const objectRefreshPromises = [];
+        
         for (const group of this.layout.groups) {
             for (const element of group.elements) {
                 if (element.connect && typeof element.connect === 'function') {
@@ -330,8 +334,69 @@ class IobrkerDashboard {
                     element.on('valueChanged', () => {
                         this.debouncedRender();
                     });
+                    
+                    // Refresh object metadata from ioBroker for each element
+                    if (element.stateId && this.client && this.client.isConnected()) {
+                        objectRefreshPromises.push(this.refreshElementObject(element));
+                    }
                 }
             }
+        }
+        
+        // Wait for all object metadata refreshes to complete
+        if (objectRefreshPromises.length > 0) {
+            try {
+                const results = await Promise.allSettled(objectRefreshPromises);
+                const successCount = results.filter(r => r.status === 'fulfilled' && r.value === true).length;
+                this.addInfoMessage(`[METADATA] Refreshed object metadata for ${successCount}/${objectRefreshPromises.length} elements`);
+                this.debouncedRender();
+            } catch (error) {
+                this.addWarningMessage(`[METADATA] Some object metadata failed to refresh: ${error.message}`);
+            }
+        }
+    }
+    
+    async refreshElementObject(element) {
+        try {
+            const objData = await this.client.getObject(element.stateId);
+            if (objData && objData.common) {
+                const common = objData.common;
+                let updated = false;
+                
+                // Update unit if it has changed
+                if (common.unit !== undefined && element.unit !== common.unit) {
+                    element.unit = common.unit;
+                    updated = true;
+                }
+                
+                // Update min/max for gauge elements
+                if (element.type === 'gauge') {
+                    if (common.min !== undefined && element.min !== common.min) {
+                        element.min = common.min;
+                        updated = true;
+                    }
+                    if (common.max !== undefined && element.max !== common.max) {
+                        element.max = common.max;
+                        updated = true;
+                    }
+                }
+                
+                // Update interactive flag based on write permission
+                if (common.write !== undefined && element.interactive !== (common.write !== false)) {
+                    element.interactive = common.write !== false;
+                    updated = true;
+                }
+                
+                if (updated) {
+                    console.log(`[METADATA] Updated object metadata for ${element.stateId}: unit=${element.unit}, min=${element.min}, max=${element.max}, interactive=${element.interactive}`);
+                }
+                
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.warn(`Failed to refresh object metadata for ${element.stateId}:`, error.message);
+            return false;
         }
     }
 
@@ -446,14 +511,14 @@ class IobrkerDashboard {
             if (element.type === 'button') {
                 const success = await element.trigger();
                 if (success) {
-                    this.addInfoMessage(`🔘 Triggered: ${element.caption}`);
+                    this.addInfoMessage(`[TRIGGERED] Triggered: ${element.caption}`);
                 } else {
                     this.addErrorMessage(`Failed to trigger: ${element.caption}`);
                 }
             } else if (element.type === 'switch') {
                 const success = await element.toggle();
                 if (success) {
-                    this.addInfoMessage(`🔄 Toggled: ${element.caption}`);
+                    this.addInfoMessage(`[TOGGLED] Toggled: ${element.caption}`);
                 } else {
                     this.addErrorMessage(`Failed to toggle: ${element.caption}`);
                 }
@@ -470,7 +535,7 @@ class IobrkerDashboard {
         return this.interactiveElements[this.selectedElementIndex];
     }
 
-    handleInput(key) {
+    async handleInput(key) {
         if (!this.running) return;
 
         // Handle special keys
@@ -493,8 +558,12 @@ class IobrkerDashboard {
 
         // Handle Shift+Tab for reverse navigation
         if (key === '\x1b[Z') { // Shift+Tab
-            if (this.inputBuffer.length === 0) {
+            if (this.inputBuffer.length === 0) { // Only navigate when not typing
                 this.selectPreviousInteractiveElement();
+            } else {
+                // Shift+Tab while typing - add to input buffer (reverse tab character)
+                this.inputBuffer += '\t';
+                this.renderDashboard();
             }
             return;
         }
@@ -600,14 +669,15 @@ class IobrkerDashboard {
                 this.renderDashboard();
                 
                 const modeText = this.commandMode ? 'Command Mode (full screen output)' : 'Dashboard Mode';
-                this.addInfoMessage(`📺 Switched to ${modeText}`);
+                this.addInfoMessage(`[MODE] Switched to ${modeText}`);
             }
             return;
         }
 
-        // Handle number keys for dashboard hotkeys (only when input buffer is empty)
-        if (this.inputBuffer.length === 0 && key >= '0' && key <= '9') {
-            await this.handleDashboardHotkey(key);
+        // Handle Alt+number keys for dashboard hotkeys
+        // Alt+number sends escape sequence like '\x1b1', '\x1b2', etc.
+        if (key.length === 2 && key[0] === '\x1b' && key[1] >= '0' && key[1] <= '9') {
+            await this.handleDashboardHotkey(key[1]);
             return;
         }
 
@@ -657,7 +727,7 @@ class IobrkerDashboard {
             const loadResult = await this.configManager.load(filename);
             
             if (loadResult.success) {
-                this.connectElementsToClient();
+                await this.connectElementsToClient();
                 
                 // Force complete re-render
                 this.renderer.initialized = false;
@@ -666,13 +736,13 @@ class IobrkerDashboard {
                 this.renderDashboard();
                 
                 const elementCount = this.layout.groups.reduce((sum, g) => sum + g.elements.length, 0);
-                this.addSuccessMessage(`🔢 Hotkey ${key}: Loaded "${filename}" (${this.layout.groups.length} groups, ${elementCount} elements)`);
+                this.addSuccessMessage(`[HOTKEY] Alt+${key}: Loaded "${filename}" (${this.layout.groups.length} groups, ${elementCount} elements)`);
             } else {
-                this.addWarningMessage(`🔢 Hotkey ${key}: Dashboard "${filename}" not found`);
-                this.addInfoMessage('💡 Create dashboards using /save -f <filename> or name them dashboard1.json - dashboard9.json');
+                this.addWarningMessage(`[HOTKEY] Alt+${key}: Dashboard "${filename}" not found`);
+                this.addInfoMessage('[TIP] Create dashboards using /save -f <filename> or name them dashboard1.json - dashboard9.json');
             }
         } catch (error) {
-            this.addErrorMessage(`🔢 Hotkey ${key}: Error loading "${filename}": ${error.message}`);
+            this.addErrorMessage(`[HOTKEY] Alt+${key}: Error loading "${filename}": ${error.message}`);
         }
     }
 
@@ -764,24 +834,24 @@ class IobrkerDashboard {
     async processAIInput(input) {
         // Process non-slash input as AI natural language
         if (this.ai && this.ai.isAvailable()) {
-            this.addInfoMessage(`🤖 Processing natural language: "${input}"`);
+            this.addInfoMessage(`[AI] Processing natural language: "${input}"`);
             try {
                 const aiResult = await this.ai.processNaturalLanguageQuery(input);
                 await this.ai.executeAIResponse(aiResult);
             } catch (aiError) {
                 this.addErrorMessage(`AI processing failed: ${aiError.message}`);
-                this.addInfoMessage('💡 Tip: Use /commands for explicit commands (e.g., /help, /add, /ls)');
+                this.addInfoMessage('[TIP] Tip: Use /commands for explicit commands (e.g., /help, /add, /ls)');
             }
         } else {
             this.addErrorMessage('AI assistant not available');
-            this.addInfoMessage('💡 Set ANTHROPIC_API_KEY to enable AI assistance');
-            this.addInfoMessage('💡 Use /commands for explicit commands (e.g., /help, /add, /ls)');
+            this.addInfoMessage('[TIP] Set ANTHROPIC_API_KEY to enable AI assistance');
+            this.addInfoMessage('[TIP] Use /commands for explicit commands (e.g., /help, /add, /ls)');
         }
     }
 
     showHelp() {
         if (this.isOnboarding && this.onboardingStep === 'connection') {
-            this.addInfoMessage('📖 Connection setup commands:');
+            this.addInfoMessage('[HELP] Connection setup commands:');
             this.showCommandsInColumns([
                 ['set-url <ip:port>', 'Set ioBroker URL'],
                 ['test-connection', 'Test connection to ioBroker'],
@@ -790,7 +860,7 @@ class IobrkerDashboard {
                 ['exit', 'Exit without saving']
             ]);
         } else if (this.isOnboarding && this.onboardingStep === 'dashboard') {
-            this.addInfoMessage('📖 Dashboard setup commands:');
+            this.addInfoMessage('[HELP] Dashboard setup commands:');
             this.showCommandsInColumns([
                 ['create-group <name>', 'Create a new group'],
                 ['add-state <group> <caption> <stateId> [type]', 'Add element (type auto-detected)'],
@@ -799,7 +869,7 @@ class IobrkerDashboard {
                 ['exit', 'Exit without saving']
             ]);
         } else {
-            this.addInfoMessage('📖 Available commands:');
+            this.addInfoMessage('[HELP] Available commands:');
             
             // Get all commands from registry
             const registryCommands = this.commands.getCommandHelp();
@@ -845,7 +915,7 @@ class IobrkerDashboard {
     async stop() {
         if (!this.running) return;
 
-        console.log('\n👋 Shutting down dashboard...');
+        console.log('\n[SHUTDOWN] Shutting down dashboard...');
         
         this.running = false;
         

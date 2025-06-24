@@ -25,22 +25,22 @@ export class OnboardingSystem {
 
     showWelcome() {
         this.dashboard.addMessage('', 'info'); // Empty line
-        this.dashboard.addMessage('🎉 Welcome to ioBroker Dashboard CLI!', 'success');
+        this.dashboard.addMessage('Welcome to ioBroker Dashboard CLI!', 'success');
         this.dashboard.addMessage('', 'info');
         this.dashboard.addMessage('Let\'s set up your dashboard in a few quick steps:', 'info');
-        this.dashboard.addMessage('  1️⃣  Configure ioBroker connection', 'info');
-        this.dashboard.addMessage('  2️⃣  Choose your color theme', 'info');
-        this.dashboard.addMessage('  3️⃣  Set dashboard layout preferences', 'info');
-        this.dashboard.addMessage('  4️⃣  Configure AI features (optional)', 'info');
+        this.dashboard.addMessage('  Step 1: Configure ioBroker connection', 'info');
+        this.dashboard.addMessage('  Step 2: Choose your color theme', 'info');
+        this.dashboard.addMessage('  Step 3: Set dashboard layout preferences', 'info');
+        this.dashboard.addMessage('  Step 4: Configure AI features (optional)', 'info');
         this.dashboard.addMessage('', 'info');
-        this.dashboard.addMessage('💡 You\'re currently in command mode - perfect for setup!', 'info');
+        this.dashboard.addMessage('Note: You\'re currently in command mode - perfect for setup!', 'info');
         this.dashboard.addMessage('', 'info');
     }
 
     async askForSocketIOUrl() {
         this.currentStep = 'socketio-url';
         
-        this.dashboard.addMessage('📡 Step 1: ioBroker Connection', 'info');
+        this.dashboard.addMessage('Step 1: ioBroker Connection', 'info');
         this.dashboard.addMessage('', 'info');
         this.dashboard.addMessage('Please enter your ioBroker Socket.IO URL:', 'info');
         this.dashboard.addMessage('Examples:', 'info');
@@ -48,7 +48,7 @@ export class OnboardingSystem {
         this.dashboard.addMessage('  • http://localhost:8082', 'info');
         this.dashboard.addMessage('  • http://iobroker.local:8082', 'info');
         this.dashboard.addMessage('', 'info');
-        this.dashboard.addMessage('⌨️  Type the URL and press Enter:', 'warning');
+        this.dashboard.addMessage('Type the URL and press Enter:', 'warning');
         
         this.dashboard.updatePrompt();
         this.dashboard.renderDashboard();
@@ -62,12 +62,12 @@ export class OnboardingSystem {
                 throw new Error('URL must use http:// or https://');
             }
         } catch (error) {
-            this.dashboard.addMessage('❌ Invalid URL format. Please try again.', 'error');
+            this.dashboard.addMessage('Error: Invalid URL format. Please try again.', 'error');
             this.dashboard.addMessage('Example: http://192.168.1.100:8082', 'info');
             return false;
         }
 
-        this.dashboard.addMessage(`🔍 Testing connection to: ${url}`, 'info');
+        this.dashboard.addMessage(`Testing connection to: ${url}`, 'info');
         
         // Test the connection
         try {
@@ -78,13 +78,13 @@ export class OnboardingSystem {
             await this.dashboard.client.connect();
             
             this.settings.iobrokerUrl = url;
-            this.dashboard.addMessage('✅ Connection successful!', 'success');
+            this.dashboard.addMessage('Success: Connection successful!', 'success');
             this.dashboard.addMessage('', 'info');
             
             await this.askForColorScheme();
             return true;
         } catch (error) {
-            this.dashboard.addMessage(`❌ Connection failed: ${error.message}`, 'error');
+            this.dashboard.addMessage(`Error: Connection failed: ${error.message}`, 'error');
             this.dashboard.addMessage('Please check the URL and try again:', 'warning');
             return false;
         }
@@ -93,7 +93,7 @@ export class OnboardingSystem {
     async askForColorScheme() {
         this.currentStep = 'color-scheme';
         
-        this.dashboard.addMessage('🎨 Step 2: Choose Your Color Theme', 'info');
+        this.dashboard.addMessage('Step 2: Choose Your Color Theme', 'info');
         this.dashboard.addMessage('', 'info');
         
         const schemes = getAvailableSchemes();
@@ -107,8 +107,8 @@ export class OnboardingSystem {
         this.dashboard.addMessage('', 'info');
         this.showColorPreview('default'); // Show default preview initially
         this.dashboard.addMessage('', 'info');
-        this.dashboard.addMessage('⌨️  Type theme name or number and press Enter:', 'warning');
-        this.dashboard.addMessage('💡 Try typing different theme names to see previews!', 'info');
+        this.dashboard.addMessage('Type theme name or number and press Enter:', 'warning');
+        this.dashboard.addMessage('Tip: Try typing different theme names to see previews!', 'info');
     }
 
     showColorPreview(schemeName) {
@@ -116,7 +116,7 @@ export class OnboardingSystem {
         const originalScheme = Object.assign({}, THEMES);
         applyColorScheme(schemeName);
         
-        this.dashboard.addMessage(`🖼️  Preview of "${schemeName}" theme:`, 'info');
+        this.dashboard.addMessage(`Preview of "${schemeName}" theme:`, 'info');
         
         // Create a sample group preview using the current theme colors
         const previewLines = [
@@ -150,10 +150,10 @@ export class OnboardingSystem {
             const match = schemes.find(s => s.startsWith(input.toLowerCase()));
             if (match) {
                 this.showColorPreview(match);
-                this.dashboard.addMessage(`💡 Did you mean "${match}"? Type the full name to select.`, 'info');
+                this.dashboard.addMessage(`Tip: Did you mean "${match}"? Type the full name to select.`, 'info');
                 return false; // Don't proceed, just show preview
             } else {
-                this.dashboard.addMessage('❌ Invalid theme. Please try again.', 'error');
+                this.dashboard.addMessage('Error: Invalid theme. Please try again.', 'error');
                 this.dashboard.addMessage('Available: ' + schemes.join(', '), 'info');
                 return false;
             }
@@ -166,7 +166,7 @@ export class OnboardingSystem {
         this.dashboard.renderer.initialized = false;
         this.dashboard.renderer.elementPositions.clear();
         
-        this.dashboard.addMessage(`✅ Applied "${selectedScheme}" theme!`, 'success');
+        this.dashboard.addMessage(`Success: Applied "${selectedScheme}" theme!`, 'success');
         this.dashboard.addMessage('', 'info');
         
         await this.askForGroupWidth();
@@ -176,7 +176,7 @@ export class OnboardingSystem {
     async askForGroupWidth() {
         this.currentStep = 'group-width';
         
-        this.dashboard.addMessage('📏 Step 3: Dashboard Layout', 'info');
+        this.dashboard.addMessage('Step 3: Dashboard Layout', 'info');
         this.dashboard.addMessage('', 'info');
         this.dashboard.addMessage('What should be the default width for dashboard groups?', 'info');
         this.dashboard.addMessage('', 'info');
@@ -186,7 +186,7 @@ export class OnboardingSystem {
         this.dashboard.addMessage('  • 30 - Compact (fits more groups)', 'info');
         this.dashboard.addMessage('  • 50 - Extra wide (detailed displays)', 'info');
         this.dashboard.addMessage('', 'info');
-        this.dashboard.addMessage('⌨️  Enter width (or press Enter for 35):', 'warning');
+        this.dashboard.addMessage('Enter width (or press Enter for 35):', 'warning');
     }
 
     async handleGroupWidthInput(input) {
@@ -195,14 +195,14 @@ export class OnboardingSystem {
         if (input.trim()) {
             const num = parseInt(input);
             if (isNaN(num) || num < 20 || num > 80) {
-                this.dashboard.addMessage('❌ Width must be between 20 and 80. Please try again.', 'error');
+                this.dashboard.addMessage('Error: Width must be between 20 and 80. Please try again.', 'error');
                 return false;
             }
             width = num;
         }
         
         this.settings.groupWidth = width;
-        this.dashboard.addMessage(`✅ Set group width to ${width} characters`, 'success');
+        this.dashboard.addMessage(`Success: Set group width to ${width} characters`, 'success');
         this.dashboard.addMessage('', 'info');
         
         await this.askForAISupport();
@@ -212,7 +212,7 @@ export class OnboardingSystem {
     async askForAISupport() {
         this.currentStep = 'ai-support';
         
-        this.dashboard.addMessage('🤖 Step 4: AI Assistant (Optional)', 'info');
+        this.dashboard.addMessage('Step 4: AI Assistant (Optional)', 'info');
         this.dashboard.addMessage('', 'info');
         this.dashboard.addMessage('Enable AI assistant for natural language commands?', 'info');
         this.dashboard.addMessage('', 'info');
@@ -221,22 +221,22 @@ export class OnboardingSystem {
         this.dashboard.addMessage('  • "add a temperature sensor"', 'info');
         this.dashboard.addMessage('  • "what\'s the status of the heating system"', 'info');
         this.dashboard.addMessage('', 'info');
-        this.dashboard.addMessage('⌨️  Enable AI? (y/n or press Enter for no):', 'warning');
+        this.dashboard.addMessage('Enable AI? (y/n or press Enter for no):', 'warning');
     }
 
     async handleAISupportInput(input) {
         const enable = input.toLowerCase().startsWith('y');
         
         if (enable) {
-            this.dashboard.addMessage('🔑 Please enter your Anthropic API key:', 'info');
+            this.dashboard.addMessage('Please enter your Anthropic API key:', 'info');
             this.dashboard.addMessage('(Get one at: https://console.anthropic.com/)', 'info');
             this.dashboard.addMessage('', 'info');
-            this.dashboard.addMessage('⌨️  Enter API key:', 'warning');
+            this.dashboard.addMessage('Enter API key:', 'warning');
             this.currentStep = 'ai-api-key';
         } else {
             this.settings.aiEnabled = false;
-            this.dashboard.addMessage('✅ AI assistant disabled', 'success');
-            this.dashboard.addMessage('💡 You can enable it later with environment variables', 'info');
+            this.dashboard.addMessage('Success: AI assistant disabled', 'success');
+            this.dashboard.addMessage('Note: You can enable it later with environment variables', 'info');
             this.dashboard.addMessage('', 'info');
             
             await this.completeOnboarding();
@@ -247,13 +247,13 @@ export class OnboardingSystem {
 
     async handleAIApiKeyInput(input) {
         if (!input.trim() || input.length < 20) {
-            this.dashboard.addMessage('❌ API key seems too short. Please try again.', 'error');
+            this.dashboard.addMessage('Error: API key seems too short. Please try again.', 'error');
             return false;
         }
         
         this.settings.aiEnabled = true;
         this.settings.anthropicApiKey = input.trim();
-        this.dashboard.addMessage('✅ AI API key configured', 'success');
+        this.dashboard.addMessage('Success: AI API key configured', 'success');
         this.dashboard.addMessage('', 'info');
         
         await this.askForMCPSupport();
@@ -263,7 +263,7 @@ export class OnboardingSystem {
     async askForMCPSupport() {
         this.currentStep = 'mcp-support';
         
-        this.dashboard.addMessage('🔗 Model Context Protocol (MCP)', 'info');
+        this.dashboard.addMessage('Model Context Protocol (MCP)', 'info');
         this.dashboard.addMessage('', 'info');
         this.dashboard.addMessage('Enable MCP for enhanced AI integration with ioBroker?', 'info');
         this.dashboard.addMessage('', 'info');
@@ -272,21 +272,21 @@ export class OnboardingSystem {
         this.dashboard.addMessage('  • Browse adapter configurations', 'info');
         this.dashboard.addMessage('  • Execute advanced automation', 'info');
         this.dashboard.addMessage('', 'info');
-        this.dashboard.addMessage('⌨️  Enable MCP? (y/n or press Enter for no):', 'warning');
+        this.dashboard.addMessage('Enable MCP? (y/n or press Enter for no):', 'warning');
     }
 
     async handleMCPSupportInput(input) {
         const enable = input.toLowerCase().startsWith('y');
         
         if (enable) {
-            this.dashboard.addMessage('🌐 Please enter your MCP server URL:', 'info');
+            this.dashboard.addMessage('Please enter your MCP server URL:', 'info');
             this.dashboard.addMessage('Example: http://192.168.1.100:8082/mcp', 'info');
             this.dashboard.addMessage('', 'info');
-            this.dashboard.addMessage('⌨️  Enter MCP URL:', 'warning');
+            this.dashboard.addMessage('Enter MCP URL:', 'warning');
             this.currentStep = 'mcp-url';
         } else {
             this.settings.mcpEnabled = false;
-            this.dashboard.addMessage('✅ MCP disabled', 'success');
+            this.dashboard.addMessage('Success: MCP disabled', 'success');
             this.dashboard.addMessage('', 'info');
             
             await this.completeOnboarding();
@@ -302,14 +302,14 @@ export class OnboardingSystem {
                 throw new Error('URL must use http:// or https://');
             }
         } catch (error) {
-            this.dashboard.addMessage('❌ Invalid URL format. Please try again.', 'error');
+            this.dashboard.addMessage('Error: Invalid URL format. Please try again.', 'error');
             this.dashboard.addMessage('Example: http://192.168.1.100:8082/mcp', 'info');
             return false;
         }
         
         this.settings.mcpEnabled = true;
         this.settings.mcpUrl = input.trim();
-        this.dashboard.addMessage('✅ MCP URL configured', 'success');
+        this.dashboard.addMessage('Success: MCP URL configured', 'success');
         this.dashboard.addMessage('', 'info');
         
         await this.completeOnboarding();
@@ -317,32 +317,32 @@ export class OnboardingSystem {
     }
 
     async completeOnboarding() {
-        this.dashboard.addMessage('🎊 Setup Complete!', 'success');
+        this.dashboard.addMessage('Setup Complete!', 'success');
         this.dashboard.addMessage('', 'info');
         
         // Apply all settings
         await this.applySettings();
         
         // Show summary
-        this.dashboard.addMessage('📋 Your Configuration:', 'info');
-        this.dashboard.addMessage(`  📡 ioBroker: ${this.settings.iobrokerUrl}`, 'info');
-        this.dashboard.addMessage(`  🎨 Theme: ${this.settings.colorScheme}`, 'info');
-        this.dashboard.addMessage(`  📏 Group Width: ${this.settings.groupWidth}`, 'info');
-        this.dashboard.addMessage(`  🤖 AI Assistant: ${this.settings.aiEnabled ? 'Enabled' : 'Disabled'}`, 'info');
+        this.dashboard.addMessage('Your Configuration:', 'info');
+        this.dashboard.addMessage(`  ioBroker: ${this.settings.iobrokerUrl}`, 'info');
+        this.dashboard.addMessage(`  Theme: ${this.settings.colorScheme}`, 'info');
+        this.dashboard.addMessage(`  Group Width: ${this.settings.groupWidth}`, 'info');
+        this.dashboard.addMessage(`  AI Assistant: ${this.settings.aiEnabled ? 'Enabled' : 'Disabled'}`, 'info');
         if (this.settings.aiEnabled) {
-            this.dashboard.addMessage(`  🔗 MCP: ${this.settings.mcpEnabled ? 'Enabled' : 'Disabled'}`, 'info');
+            this.dashboard.addMessage(`  MCP: ${this.settings.mcpEnabled ? 'Enabled' : 'Disabled'}`, 'info');
         }
         this.dashboard.addMessage('', 'info');
         
         // Give next steps
-        this.dashboard.addMessage('🚀 Ready to go! Here\'s what you can do:', 'info');
+        this.dashboard.addMessage('Ready to go! Here\'s what you can do:', 'info');
         this.dashboard.addMessage('  • /add -c -g "My Group" - Create your first group', 'info');
         this.dashboard.addMessage('  • /add -g "My Group" -n "Sensor" -s state.id - Add elements', 'info');
         this.dashboard.addMessage('  • /theme -l - Try different color themes', 'info');
         this.dashboard.addMessage('  • ESC - Toggle between dashboard and command mode', 'info');
         this.dashboard.addMessage('  • /help - Show all available commands', 'info');
         this.dashboard.addMessage('', 'info');
-        this.dashboard.addMessage('💡 Press ESC to switch to dashboard mode and start building!', 'warning');
+        this.dashboard.addMessage('Tip: Press ESC to switch to dashboard mode and start building!', 'warning');
         
         // Mark onboarding as complete
         this.dashboard.isOnboarding = false;
@@ -373,7 +373,7 @@ export class OnboardingSystem {
                     try {
                         await this.dashboard.mcp.connect();
                     } catch (error) {
-                        this.dashboard.addMessage(`⚠️  MCP connection failed: ${error.message}`, 'warning');
+                        this.dashboard.addMessage(`Warning: MCP connection failed: ${error.message}`, 'warning');
                     }
                 }
             }
@@ -381,7 +381,7 @@ export class OnboardingSystem {
         
         // Create initial dashboard configuration
         await this.dashboard.configManager.save('onboarding.json');
-        this.dashboard.addMessage('💾 Configuration saved to onboarding.json', 'success');
+        this.dashboard.addMessage('Configuration saved to onboarding.json', 'success');
     }
 
     getSchemeDescription(scheme) {

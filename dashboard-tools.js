@@ -174,13 +174,13 @@ class DashboardTools extends EventEmitter {
     }
 
     // Element Management
-    async addElement(groupId, elementConfig) {
+    async addElement(groupId, elementConfig, insertIndex = undefined) {
         try {
             // Create a proper DashboardElement instance
             const element = createElement(elementConfig);
             
             // Add it to the group
-            const addedElement = this.layoutEngine.addElementToGroup(groupId, element);
+            const addedElement = this.layoutEngine.addElementToGroup(groupId, element, insertIndex);
             
             if (addedElement) {
                 this.emit('elementAdded', { groupId, element: addedElement });
@@ -203,6 +203,31 @@ class DashboardTools extends EventEmitter {
             } else {
                 throw new Error('Element not found');
             }
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    }
+
+    async renameElement(groupId, elementId, newCaption) {
+        try {
+            const group = this.layoutEngine.getGroup(groupId);
+            if (!group) {
+                throw new Error(`Group ${groupId} not found`);
+            }
+            
+            const element = group.elements.find(e => e.id === elementId);
+            if (!element) {
+                throw new Error(`Element ${elementId} not found in group ${groupId}`);
+            }
+            
+            const oldCaption = element.caption;
+            element.caption = newCaption;
+            
+            this.layoutEngine.calculateLayout();
+            
+            this.emit('elementRenamed', { groupId, elementId, oldCaption, newCaption });
+            
+            return { success: true, oldCaption, newCaption, element };
         } catch (error) {
             return { success: false, error: error.message };
         }

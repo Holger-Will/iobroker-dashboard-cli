@@ -180,15 +180,16 @@ class LayoutEngine extends EventEmitter {
     }
 
     // Add element to group
-    addElementToGroup(groupId, element) {
+    addElementToGroup(groupId, element, insertIndex = undefined) {
         const group = this.getGroup(groupId);
         if (group) {
-            group.elements.push({
-                id: element.id || `element_${Date.now()}`,
-                ...element
-            });
+            if (insertIndex !== undefined && insertIndex >= 0 && insertIndex <= group.elements.length) {
+                group.elements.splice(insertIndex, 0, element);
+            } else {
+                group.elements.push(element);
+            }
             this.calculateLayout();
-            return group.elements[group.elements.length - 1];
+            return element; // Return the original DashboardElement instance
         }
         return null;
     }

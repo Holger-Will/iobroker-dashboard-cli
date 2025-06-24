@@ -4,7 +4,12 @@
       "Bash(node test-flag-parser.js)",
       "Bash(node:*)",
       "Bash(pkill:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(rm:*)",
+      "Bash(grep:*)",
+      "Bash(timeout:*)",
+      "Bash(rg:*)"
     ],
     "deny": []
   }

@@ -37,8 +37,8 @@ export class ToggleModeCommand extends BaseCommand {
         this.dashboard.renderDashboard();
         
         const modeText = this.dashboard.commandMode ? 'Command Mode (full screen output)' : 'Dashboard Mode';
-        this.success(`📺 Switched to ${modeText}`);
-        this.info('💡 Tip: Press ESC to toggle modes quickly');
+        this.success(`[MODE] Switched to ${modeText}`);
+        this.info('[TIP] Tip: Press ESC to toggle modes quickly');
     }
 }
 

@@ -118,14 +118,14 @@ class DashboardElement extends EventEmitter {
                 break;
                 
             case 'switch':
-                const switchIcon = colorizeSwitch(this.value);
+                const switchDisplay = colorizeSwitch(this.value);
                 leftText = colorize(this.caption, THEMES.caption);
-                rightText = `${colorize(this.formatValue(), this.value ? THEMES.active : THEMES.inactive)} ${switchIcon}`;
+                rightText = `${colorize(this.formatValue(), this.value ? THEMES.active : THEMES.inactive)} ${switchDisplay}`;
                 break;
                 
             case 'button':
                 leftText = colorize(this.caption, THEMES.caption);
-                rightText = colorize('▶', THEMES.active);
+                rightText = colorize('[PRESS]', THEMES.active);
                 break;
                 
             case 'indicator':

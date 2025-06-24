@@ -426,11 +426,12 @@ class SmoothRenderer {
             }
             
             // Pad message content to fill width and add right border
-            const paddingNeeded = Math.max(0, contentWidth - this.getVisibleLength(messageContent));
+            const visibleLength = this.getVisibleLength(messageContent);
+            const paddingNeeded = Math.max(0, contentWidth - visibleLength);
             const paddedContent = messageContent + ' '.repeat(paddingNeeded);
             this.writeText(paddedContent);
             
-            // Right border
+            // Right border - ensure we're at the correct position
             this.writeText(colorize(' ' + style.vertical, THEMES.border));
         }
     }
@@ -475,13 +476,13 @@ class SmoothRenderer {
         }
         
         if (message.type === 'success') {
-            return colorize('✅ ', THEMES.active) + this.truncateText(message.text, maxWidth - 3);
+            return colorize('[OK] ', THEMES.active) + this.truncateText(message.text, maxWidth - 5);
         } else if (message.type === 'error') {
-            return colorize('❌ ', THEMES.error) + this.truncateText(message.text, maxWidth - 3);
+            return colorize('[ERROR] ', THEMES.error) + this.truncateText(message.text, maxWidth - 8);
         } else if (message.type === 'info') {
-            return colorize('ℹ️ ', THEMES.neutral) + this.truncateText(message.text, maxWidth - 3);
+            return colorize('[INFO] ', THEMES.neutral) + this.truncateText(message.text, maxWidth - 7);
         } else if (message.type === 'warning') {
-            return colorize('⚠️ ', THEMES.warning) + this.truncateText(message.text, maxWidth - 3);
+            return colorize('[WARN] ', THEMES.warning) + this.truncateText(message.text, maxWidth - 7);
         }
         
         return this.truncateText(message.text || message.toString(), maxWidth);
@@ -530,6 +531,8 @@ class SmoothRenderer {
 
     // Get visible length of text (excluding ANSI color codes)
     getVisibleLength(text) {
+        // Remove ANSI color codes and return string length
+        // Since we removed all emojis, simple string length should work perfectly
         return text.replace(/\x1b\[[0-9;]*m/g, '').length;
     }
 

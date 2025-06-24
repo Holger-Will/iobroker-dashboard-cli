@@ -18,7 +18,7 @@ class MCPClient {
 
     async connect() {
         try {
-            console.log(`🔌 Connecting to MCP server at ${this.config.serverUrl}...`);
+            console.log(`[MCP] Connecting to MCP server at ${this.config.serverUrl}...`);
             
             // Create StreamableHTTPClientTransport
             this.transport = new StreamableHTTPClientTransport(this.config.serverUrl);
@@ -39,14 +39,14 @@ class MCPClient {
             await this.client.connect(this.transport);
             
             this.connected = true;
-            console.log('✅ Connected to MCP server');
+            console.log('[MCP] Connected to MCP server');
             
             // List available tools and resources
             await this.discoverCapabilities();
             
             return true;
         } catch (error) {
-            console.error('❌ Failed to connect to MCP server:', error.message);
+            console.error('[MCP] Failed to connect to MCP server:', error.message);
             this.connected = false;
             return false;
         }
@@ -61,7 +61,7 @@ class MCPClient {
                 toolsResponse.tools.forEach(tool => {
                     this.tools.set(tool.name, tool);
                 });
-                console.log(`📦 Discovered ${this.tools.size} MCP tools:`, Array.from(this.tools.keys()));
+                console.log(`[MCP] Discovered ${this.tools.size} MCP tools:`, Array.from(this.tools.keys()));
             }
 
             // List available resources
@@ -75,7 +75,7 @@ class MCPClient {
             }
 
         } catch (error) {
-            console.error('⚠️ Failed to discover MCP capabilities:', error.message);
+            console.error('[MCP] Failed to discover MCP capabilities:', error.message);
         }
     }
 

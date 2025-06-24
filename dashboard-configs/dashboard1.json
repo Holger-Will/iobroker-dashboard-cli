@@ -1,8 +1,8 @@
 {
   "version": "1.0.0",
   "name": "Dashboard Configuration",
-  "created": "2025-06-23T14:11:28.980Z",
-  "updated": "2025-06-23T14:11:28.980Z",
+  "created": "2025-06-24T17:26:02.696Z",
+  "updated": "2025-06-24T17:26:02.696Z",
   "layout": {
     "groupWidth": 50,
     "groupPaddingX": 1,
@@ -22,6 +22,16 @@
           "unit": "°C",
           "min": 0,
           "max": 100,
+          "interactive": false
+        },
+        {
+          "id": "gauge_1750784196362",
+          "type": "gauge",
+          "caption": "Outdoor Temperature",
+          "stateId": "modbus.2.holdingRegisters._Aussentemparatur",
+          "unit": "°C",
+          "min": 0,
+          "max": 100,
           "interactive": true
         }
       ]
@@ -35,6 +45,22 @@
           "type": "switch",
           "caption": "Kueche",
           "stateId": "hue.0.Kücheninsel.on",
+          "unit": "",
+          "interactive": true
+        },
+        {
+          "id": "switch_1750784614715",
+          "type": "switch",
+          "caption": "Oberschrank",
+          "stateId": "zigbee.0.ec1bbdfffe7f51de.state",
+          "unit": "",
+          "interactive": true
+        },
+        {
+          "id": "switch_1750785902035",
+          "type": "switch",
+          "caption": "Oberschrank2",
+          "stateId": "zigbee.0.ec1bbdfffe8386dd.state",
           "unit": "",
           "interactive": true
         }

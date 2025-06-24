@@ -143,11 +143,11 @@ export class AddCommand extends BaseCommand {
                         const inferredType = this.inferElementType(objData.common, finalElementType);
                         if (!requestedType) {
                             // No type specified - use inferred type
-                            this.info(`↳ Auto-detected element type: ${inferredType} (from ${objData.common.type}/${objData.common.role})`);
+                            this.info(`[AUTO] Auto-detected element type: ${inferredType} (from ${objData.common.type}/${objData.common.role})`);
                             finalElementType = inferredType;
                         } else if (inferredType !== finalElementType) {
                             // Type specified but different from inference
-                            this.info(`↳ Using specified type: ${finalElementType} (inferred: ${inferredType})`);
+                            this.info(`[USING] Using specified type: ${finalElementType} (inferred: ${inferredType})`);
                         }
                     } else if (!requestedType) {
                         this.warning(`Could not get object metadata for ${stateId} - using default type: ${finalElementType}`);
@@ -183,16 +183,33 @@ export class AddCommand extends BaseCommand {
             if (result.success) {
                 const indexInfo = insertIndex !== undefined ? ` at position ${insertIndex}` : '';
                 this.success(`Added ${finalElementType} "${elementName}" to group "${group.title}"${indexInfo}`);
-                this.info(`↳ Monitoring: ${stateId}`);
+                this.info(`[MONITORING] Monitoring: ${stateId}`);
                 
                 // Immediately connect the new element to get current state
                 if (this.dashboard.client && this.dashboard.client.isConnected() && result.element) {
-                    result.element.connect(this.dashboard.client);
-                    
-                    // Listen for value changes to trigger re-render
-                    result.element.on('valueChanged', () => {
-                        this.dashboard.debouncedRender();
-                    });
+                    if (typeof result.element.connect === 'function') {
+                        result.element.connect(this.dashboard.client);
+                        
+                        // Listen for value changes to trigger re-render
+                        if (typeof result.element.on === 'function') {
+                            result.element.on('valueChanged', () => {
+                                this.dashboard.debouncedRender();
+                            });
+                        }
+                        
+                        // Refresh current state from ioBroker
+                        try {
+                            const state = await this.dashboard.client.getState(result.element.stateId);
+                            if (state) {
+                                result.element.updateValue(state.val, Date.now());
+                                this.info(`[SYNC] Got current value: ${state.val}`);
+                            }
+                        } catch (error) {
+                            this.warning(`Could not get current state for ${result.element.stateId}: ${error.message}`);
+                        }
+                    } else {
+                        this.error(`Element missing connect method. Type: ${typeof result.element}, Constructor: ${result.element.constructor?.name || 'unknown'}`);
+                    }
                 }
                 
                 // Force a complete re-render to show the new element
