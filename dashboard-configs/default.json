@@ -1,0 +1,24 @@
+{
+  "version": "1.0.0",
+  "name": "Dashboard Configuration",
+  "created": "2025-06-23T08:08:46.270Z",
+  "updated": "2025-06-23T08:08:46.270Z",
+  "layout": {
+    "groupWidth": 35,
+    "groupPaddingX": 1,
+    "groupPaddingY": 1,
+    "showBorders": true
+  },
+  "groups": [
+    {
+      "id": "group_1750659272455",
+      "title": "Temperatures",
+      "elements": []
+    },
+    {
+      "id": "group_1750666121268",
+      "title": "NEW",
+      "elements": []
+    }
+  ]
+}

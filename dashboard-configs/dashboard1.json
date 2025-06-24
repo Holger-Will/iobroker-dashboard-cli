@@ -1,0 +1,44 @@
+{
+  "version": "1.0.0",
+  "name": "Dashboard Configuration",
+  "created": "2025-06-23T14:11:28.980Z",
+  "updated": "2025-06-23T14:11:28.980Z",
+  "layout": {
+    "groupWidth": 50,
+    "groupPaddingX": 1,
+    "groupPaddingY": 1,
+    "showBorders": true
+  },
+  "groups": [
+    {
+      "id": "group_1750659272455",
+      "title": "Temperatures",
+      "elements": [
+        {
+          "id": "gauge_1750677212260",
+          "type": "gauge",
+          "caption": "Greenhouse",
+          "stateId": "zigbee.1.84ba20fffecf30cd.temperature",
+          "unit": "°C",
+          "min": 0,
+          "max": 100,
+          "interactive": true
+        }
+      ]
+    },
+    {
+      "id": "group_1750666321377",
+      "title": "Kueche",
+      "elements": [
+        {
+          "id": "switch_1750677546063",
+          "type": "switch",
+          "caption": "Kueche",
+          "stateId": "hue.0.Kücheninsel.on",
+          "unit": "",
+          "interactive": true
+        }
+      ]
+    }
+  ]
+}

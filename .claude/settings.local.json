@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node test-flag-parser.js)",
+      "Bash(node:*)",
+      "Bash(pkill:*)",
+      "Bash(find:*)"
+    ],
+    "deny": []
+  }
+}
