@@ -76,8 +76,16 @@ class IobrkerDashboard {
             url: this.config.iobrokerUrl
         });
 
-        // Create layout engine
+        // Initialize settings manager first
+        this.settings = new UnifiedSettingsManager({
+            settingsFile: path.join(USER_DATA_DIR, 'settings.json'),
+            configDir: this.config.configDir
+        });
+        await this.settings.initialize();
+
+        // Create layout engine with settings integration
         this.layout = new LayoutEngine({
+            settings: this.settings,
             groupWidth: this.config.groupWidth,
             groupPaddingX: this.config.groupPaddingX,
             groupPaddingY: this.config.groupPaddingY
@@ -123,11 +131,8 @@ class IobrkerDashboard {
 
     async initializeTheme() {
         try {
-            const settings = new UnifiedSettingsManager();
-            await settings.initialize();
-            
-            // Load saved theme or use default
-            const savedTheme = await settings.get('theme.name');
+            // Use the shared settings manager
+            const savedTheme = await this.settings.get('theme.name');
             if (savedTheme && savedTheme !== 'default') {
                 const success = applyTheme(savedTheme);
                 if (success) {
