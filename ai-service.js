@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import dotenv from 'dotenv';
+import { LocalToolRegistry } from './local-tools.js';
 
 class AIService {
     constructor(dashboard) {
@@ -8,6 +9,9 @@ class AIService {
         this.initialized = false;
         this.chatHistory = []; // Store conversation history
         this.maxHistoryLength = 20; // Keep last 20 exchanges
+        
+        // Initialize local tools registry
+        this.localTools = new LocalToolRegistry(dashboard);
         
         // Load environment variables from .env file
         dotenv.config();
@@ -93,16 +97,22 @@ class AIService {
                 });
             }
             
-            // Prepare MCP tools for Claude if available
+            // Prepare tools for Claude (both MCP and local)
             let tools = [];
+            
+            // Add MCP tools if available
             if (this.dashboard.mcp && this.dashboard.mcp.isConnected()) {
                 const mcpTools = this.dashboard.mcp.getAvailableTools();
-                tools = mcpTools.map(tool => ({
+                tools.push(...mcpTools.map(tool => ({
                     name: tool.name,
                     description: tool.description,
                     input_schema: tool.inputSchema
-                }));
+                })));
             }
+            
+            // Add local dashboard tools
+            const localTools = this.localTools.getToolSchemas();
+            tools.push(...localTools);
 
             // Build messages with chat history
             const messages = [...this.chatHistory, {
@@ -133,10 +143,15 @@ class AIService {
                 for (const content of response.content) {
                     if (content.type === 'tool_use') {
                         try {
-                            const toolResult = await this.dashboard.mcp.callTool(
-                                content.name,
-                                content.input
-                            );
+                            let toolResult;
+                            
+                            // Route to appropriate tool handler
+                            if (this.isLocalTool(content.name)) {
+                                toolResult = await this.localTools.callTool(content.name, content.input);
+                            } else {
+                                // Assume it's an MCP tool
+                                toolResult = await this.dashboard.mcp.callTool(content.name, content.input);
+                            }
                             
                             toolResults.push({
                                 tool: content.name,
@@ -149,7 +164,7 @@ class AIService {
                                 content: [{
                                     type: 'tool_result',
                                     tool_use_id: content.id,
-                                    content: JSON.stringify(toolResult.result)
+                                    content: JSON.stringify(toolResult.success ? toolResult.result : toolResult)
                                 }]
                             });
                         } catch (error) {
@@ -345,6 +360,33 @@ class AIService {
 
     buildSystemPrompt(context) {
         return `You are an AI assistant for an ioBroker dashboard CLI tool. You help users manage their smart home dashboard through natural language.
+
+IMPORTANT: You have access to REAL FUNCTION CALLS for dashboard operations:
+
+LOCAL DASHBOARD TOOLS:
+- add_dashboard_element: Add elements to dashboard groups
+- create_dashboard_group: Create new groups
+- save_dashboard: Save current configuration
+- load_dashboard: Load saved configurations
+- list_dashboard_configs: List available dashboards
+- get_dashboard_status: Get current status
+- remove_dashboard_element: Remove elements
+- move_group: Reorder groups
+
+MCP IOBROKER TOOLS:
+- get_states: Query ioBroker state values
+- search_states: Find states by pattern
+- set_state: Change state values
+- get_objects: Get object definitions
+
+USAGE INSTRUCTIONS:
+1. Use LOCAL tools for dashboard structure changes (add elements, create groups, save)
+2. Use MCP tools for ioBroker data queries and state changes
+3. ALWAYS use function calls instead of generating text commands
+4. Validate state IDs with MCP tools before adding dashboard elements
+5. Create groups automatically when adding elements to non-existent groups
+
+NEVER generate text commands like "/add ..." - always use the actual function calls.
 
 CURRENT DASHBOARD STATE:
 - Connected to ioBroker: ${context.connected}
@@ -561,6 +603,44 @@ User's dashboard context: ${context.groups.length} groups, ${context.status.tota
         }
         
         return args;
+    }
+
+    // Helper methods for local tool integration
+    isLocalTool(toolName) {
+        return this.localTools.tools.has(toolName);
+    }
+
+    getAvailableTools() {
+        const tools = [];
+        
+        // Add MCP tools if available
+        if (this.dashboard.mcp && this.dashboard.mcp.isConnected()) {
+            const mcpTools = this.dashboard.mcp.getAvailableTools();
+            tools.push(...mcpTools.map(tool => ({
+                name: tool.name,
+                description: tool.description,
+                input_schema: tool.inputSchema
+            })));
+        }
+        
+        // Add local dashboard tools
+        const localTools = this.localTools.getToolSchemas();
+        tools.push(...localTools);
+        
+        return tools;
+    }
+
+    async executeTool(toolName, input) {
+        if (this.isLocalTool(toolName)) {
+            return await this.localTools.callTool(toolName, input);
+        } else if (this.dashboard.mcp && this.dashboard.mcp.isConnected()) {
+            return await this.dashboard.mcp.callTool(toolName, input);
+        } else {
+            return {
+                success: false,
+                error: `Unknown tool: ${toolName}`
+            };
+        }
     }
 }
 
