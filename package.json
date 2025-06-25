@@ -35,8 +35,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.54.0",
-    "@modelcontextprotocol/sdk": "^1.13.0",
+    "@anthropic-ai/sdk": "^0.55.0",
+    "@modelcontextprotocol/sdk": "^1.13.1",
     "clui": "^0.3.6",
     "dotenv": "^16.5.0",
     "socket.io-client": "^2.5.0"
