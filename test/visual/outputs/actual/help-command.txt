@@ -1,7 +1,6 @@
 [INIT] Initializing ioBroker Dashboard...
 [CONFIG] User data directory: ~/.iobroker-dashboard-cli
 [AI] AI assistant enabled
-[CONFIG] User data directory: ~/.iobroker-dashboard-cli
 [THEME] Using default theme
 [SUCCESS] Connected
 [CONNECT] Connecting...

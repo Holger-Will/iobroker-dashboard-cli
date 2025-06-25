@@ -290,9 +290,165 @@ class DashboardElement extends EventEmitter {
     }
 }
 
+// Visual Slider Element - Interactive slider with visual bar representation
+export class VisualSliderElement extends DashboardElement {
+    constructor(config) {
+        super({
+            ...config,
+            type: 'slider'
+        });
+        
+        // Slider-specific properties
+        this.min = config.min ?? 0;
+        this.max = config.max ?? 100;
+        this.step = config.step ?? 1;
+        this.selected = false;
+        this.connectionState = true;
+    }
+
+    // Get clamped value within min/max range
+    getClampedValue() {
+        if (this.value === null || this.value === undefined) {
+            return this.min;
+        }
+        return Math.max(this.min, Math.min(this.max, this.value));
+    }
+
+    // Get percentage (0-100) based on current value
+    getPercentage() {
+        const clampedValue = this.getClampedValue();
+        const range = this.max - this.min;
+        if (range === 0) return 0;
+        return Math.round(((clampedValue - this.min) / range) * 100);
+    }
+
+    // Increment value by step amount
+    increment(amount = this.step) {
+        const newValue = this.getClampedValue() + amount;
+        this.setValue(Math.min(this.max, newValue));
+    }
+
+    // Decrement value by step amount
+    decrement(amount = this.step) {
+        const newValue = this.getClampedValue() - amount;
+        this.setValue(Math.max(this.min, newValue));
+    }
+
+    // Set new value and update ioBroker if interactive
+    setValue(newValue) {
+        const clampedValue = Math.max(this.min, Math.min(this.max, newValue));
+        this.updateValue(clampedValue);
+        
+        // Send to ioBroker if interactive and connected
+        if (this.interactive && this.iobrokerClient && this.stateId) {
+            this.iobrokerClient.setState(this.stateId, clampedValue)
+                .catch(error => this.emit('error', error));
+        }
+    }
+
+    // Handle keyboard input for slider control
+    handleKeyPress(key) {
+        switch (key) {
+            case 'ArrowRight':
+            case 'ArrowUp':
+                this.increment();
+                break;
+            case 'ArrowLeft':
+            case 'ArrowDown':
+                this.decrement();
+                break;
+            case 'PageUp':
+                this.increment(Math.max(1, (this.max - this.min) / 10));
+                break;
+            case 'PageDown':
+                this.decrement(Math.max(1, (this.max - this.min) / 10));
+                break;
+            case 'Home':
+                this.setValue(this.min);
+                break;
+            case 'End':
+                this.setValue(this.max);
+                break;
+        }
+    }
+
+    // Set selection state for visual highlighting
+    setSelected(selected) {
+        this.selected = selected;
+    }
+
+    // Set connection state for error display
+    setConnectionState(connected) {
+        this.connectionState = connected;
+    }
+
+    // Generate visual slider bar
+    generateSliderBar(barLength) {
+        if (this.value === null || this.value === undefined || !this.connectionState) {
+            return '░'.repeat(barLength);
+        }
+
+        const percentage = this.getPercentage();
+        const filledLength = Math.round((percentage / 100) * barLength);
+        const emptyLength = barLength - filledLength;
+
+        const filledPart = '█'.repeat(filledLength);
+        const emptyPart = '░'.repeat(emptyLength);
+
+        return filledPart + emptyPart;
+    }
+
+    // Override render method for slider-specific display
+    render(maxWidth) {
+        const availableWidth = Math.max(10, maxWidth - 2);
+        
+        // Handle disconnected state
+        if (!this.connectionState) {
+            const leftText = colorize(this.caption, THEMES.caption);
+            const rightText = colorize('OFFLINE', THEMES.inactive);
+            return this.alignText(leftText, rightText, availableWidth);
+        }
+
+        // Handle null/undefined values
+        if (this.value === null || this.value === undefined) {
+            const leftText = colorize(this.caption, THEMES.caption);
+            const rightText = colorize('N/A', THEMES.inactive);
+            return this.alignText(leftText, rightText, availableWidth);
+        }
+
+        const clampedValue = this.getClampedValue();
+        const formattedValue = `${clampedValue}${this.unit}`;
+        
+        // Calculate space for slider bar
+        const captionLength = this.getVisibleLength(this.caption);
+        const valueLength = this.getVisibleLength(formattedValue);
+        const minSpacing = 3; // " | " separator and spaces
+        const sliderBarLength = Math.max(5, availableWidth - captionLength - valueLength - minSpacing);
+
+        // Generate components
+        const captionText = colorize(this.caption, this.selected ? THEMES.active : THEMES.caption);
+        const sliderBar = this.generateSliderBar(sliderBarLength);
+        const valueText = colorize(formattedValue, THEMES.value);
+
+        // Apply theme colors to slider bar
+        const coloredSliderBar = sliderBar
+            .replace(/█/g, colorize('█', this.selected ? THEMES.active : THEMES.success))
+            .replace(/░/g, colorize('░', THEMES.inactive));
+
+        // Combine all parts
+        return `${captionText} ${coloredSliderBar} ${valueText}`;
+    }
+}
+
 // Factory function to create elements
 export function createElement(config) {
-    return new DashboardElement(config);
+    // Create specialized elements based on type
+    switch (config.type) {
+        case 'slider':
+            return new VisualSliderElement(config);
+        default:
+            return new DashboardElement(config);
+    }
 }
 
 // Helper function to create multiple elements
