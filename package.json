@@ -19,7 +19,13 @@
     "test:commands": "mocha 'test/unit/commands/*.test.js'",
     "test:visual": "mocha test/visual/terminal-output.test.js --timeout 60000",
     "test:visual:update": "rm -rf test/visual/outputs/baseline && npm run test:visual",
-    "test:visual:diff": "diff -r test/visual/outputs/baseline test/visual/outputs/actual || true"
+    "test:visual:diff": "diff -r test/visual/outputs/baseline test/visual/outputs/actual || true",
+    "test:ci": "npm run test:coverage && npm run test:visual",
+    "lint": "echo 'No linter configured yet'",
+    "lint:fix": "echo 'No linter configured yet'",
+    "prepack": "npm test",
+    "postinstall": "echo 'ioBroker Dashboard CLI installed successfully'",
+    "validate": "npm test && npm pack --dry-run"
   },
   "keywords": [
     "iobroker",

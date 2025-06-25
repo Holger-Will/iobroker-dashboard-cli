@@ -1,0 +1,65 @@
+version: 2
+updates:
+  # Enable npm dependency updates
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "holger"  # Replace with actual GitHub username
+    assignees:
+      - "holger"  # Replace with actual GitHub username
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "automated"
+    versioning-strategy: "increase"
+    
+    # Group updates by dependency type
+    groups:
+      test-dependencies:
+        patterns:
+          - "mocha*"
+          - "chai*"
+          - "sinon*"
+          - "nyc*"
+          - "*test*"
+        update-types:
+          - "minor"
+          - "patch"
+      
+      core-dependencies:
+        patterns:
+          - "@anthropic-ai/*"
+          - "@modelcontextprotocol/*"
+          - "socket.io-client"
+          - "clui"
+          - "dotenv"
+        update-types:
+          - "minor"
+          - "patch"
+    
+    # Ignore specific packages or versions
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+        
+  # Enable GitHub Actions dependency updates
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    labels:
+      - "github-actions"
+      - "automated"
