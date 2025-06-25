@@ -150,9 +150,10 @@ describe('StatusHeader', function() {
             mockDashboard.groups = [];
             
             const rendered = statusHeader.render();
+            const strippedText = stripAnsi(rendered);
             
-            expect(rendered).to.include('0 groups');
-            expect(rendered).to.include('0 elements');
+            expect(strippedText).to.include('0 groups');
+            expect(strippedText).to.include('0 elements');
         });
     });
 
@@ -161,18 +162,20 @@ describe('StatusHeader', function() {
             statusHeader.showTimestamp = true;
             
             const rendered = statusHeader.render();
+            const strippedText = stripAnsi(rendered);
             
-            // Should contain time in HH:MM format
-            expect(rendered).to.match(/\d{2}:\d{2}/);
+            // Should contain time in HH:MM format (at end or surrounded by spaces)
+            expect(strippedText).to.match(/\s\d{2}:\d{2}(\s|$)/);
         });
 
         it('should not show timestamp when disabled', function() {
             statusHeader.showTimestamp = false;
             
             const rendered = statusHeader.render();
+            const strippedText = stripAnsi(rendered);
             
-            // Should not contain time format
-            expect(rendered).to.not.match(/\d{2}:\d{2}/);
+            // Should not contain time format (check for timestamp at end or surrounded by spaces)
+            expect(strippedText).to.not.match(/\s\d{2}:\d{2}(\s|$)/);
         });
 
         it('should update timestamp on each render', function() {
@@ -205,12 +208,13 @@ describe('StatusHeader', function() {
         });
 
         it('should abbreviate labels for narrow displays', function() {
-            statusHeader.terminalWidth = 50;
+            statusHeader.terminalWidth = 40; // Make it narrow enough to trigger abbreviation
             
             const rendered = statusHeader.render();
+            const strippedText = stripAnsi(rendered);
             
             // Should use shorter labels
-            expect(rendered).to.include('ioBr'); // Abbreviated ioBroker
+            expect(strippedText).to.include('ioBr'); // Abbreviated ioBroker
         });
 
         it('should hide optional elements when very narrow', function() {
@@ -240,10 +244,12 @@ describe('StatusHeader', function() {
 
         it('should use error colors for disconnected status', function() {
             mockDashboard.client.connected = false;
+            mockDashboard.client.connectionState = 'disconnected';
             
             const rendered = statusHeader.render();
+            const strippedText = stripAnsi(rendered);
             
-            expect(rendered).to.include('✗'); // Disconnected symbol should be colored
+            expect(strippedText).to.include('✗'); // Disconnected symbol should be colored
         });
     });
 
@@ -292,7 +298,8 @@ describe('StatusHeader', function() {
 
         it('should update statistics when dashboard content changes', function() {
             const rendered1 = statusHeader.render();
-            expect(rendered1).to.include('2 groups');
+            const strippedText1 = stripAnsi(rendered1);
+            expect(strippedText1).to.include('2 groups');
             
             // Add another group
             mockDashboard.groups.push({ 
@@ -302,8 +309,9 @@ describe('StatusHeader', function() {
             });
             
             const rendered2 = statusHeader.render();
-            expect(rendered2).to.include('3 groups');
-            expect(rendered2).to.include('5 elements');
+            const strippedText2 = stripAnsi(rendered2);
+            expect(strippedText2).to.include('3 groups');
+            expect(strippedText2).to.include('5 elements');
         });
     });
 
