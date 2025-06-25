@@ -4,6 +4,9 @@ class LayoutEngine extends EventEmitter {
     constructor(options = {}) {
         super();
         
+        // Settings manager integration
+        this.settings = options.settings || null;
+        
         this.config = {
             groupWidth: options.groupWidth || 40,
             groupPaddingX: options.groupPaddingX || 2,
@@ -12,11 +15,21 @@ class LayoutEngine extends EventEmitter {
             terminalWidth: options.terminalWidth || process.stdout.columns || 80,
             terminalHeight: options.terminalHeight || process.stdout.rows || 24,
             inputFieldHeight: options.inputFieldHeight || 3, // reserve space for input at bottom
+            minGroupWidth: options.minGroupWidth || 15, // minimum group width for readability
             ...options
         };
         
         this.groups = [];
         this.layout = null;
+        
+        // Listen to settings changes if settings manager is provided
+        if (this.settings) {
+            this.settings.on('setting-changed', (key, value) => {
+                if (key.startsWith('layout.')) {
+                    this.calculateLayout();
+                }
+            });
+        }
         
         // Listen for terminal resize
         if (process.stdout.isTTY) {
@@ -68,8 +81,11 @@ class LayoutEngine extends EventEmitter {
     calculateGroupHeight(group) {
         let height = 0;
         
+        // Get border setting
+        const showBorders = this.getSettingOrDefault('layout.showBorders', this.config.showBorders);
+        
         // Title line (only if no borders, since borders integrate the title)
-        if (group.title && !this.config.showBorders) {
+        if (group.title && !showBorders) {
             height += 1;
         }
         
@@ -77,7 +93,7 @@ class LayoutEngine extends EventEmitter {
         height += group.elements.length;
         
         // Borders (top and bottom) - title is integrated into top border
-        if (this.config.showBorders) {
+        if (showBorders) {
             height += 2;
             // Ensure minimum height for empty groups with borders
             if (group.elements.length === 0) {
@@ -89,12 +105,38 @@ class LayoutEngine extends EventEmitter {
         return Math.max(height, 1);
     }
 
+    // Helper method to get setting value or default
+    getSettingOrDefault(key, defaultValue) {
+        if (this.settings && this.settings.has(key)) {
+            return this.settings.get(key);
+        }
+        return defaultValue;
+    }
+
     // Calculate how many groups fit horizontally
     calculateColumnsCount() {
         const availableWidth = this.config.terminalWidth;
-        const groupWithPadding = this.config.groupWidth + this.config.groupPaddingX;
         
-        // At least one column, but account for padding
+        // Get column count from settings if available, otherwise calculate dynamically
+        if (this.settings && this.settings.has('layout.columns')) {
+            const requestedColumns = this.settings.get('layout.columns');
+            
+            // Calculate if requested columns would result in acceptable group width
+            const padding = this.settings.get('layout.padding') || this.config.groupPaddingX;
+            const totalPadding = (requestedColumns - 1) * padding;
+            const groupWidth = Math.floor((availableWidth - totalPadding) / requestedColumns);
+            
+            // If groups would be too narrow, reduce column count
+            if (groupWidth < this.config.minGroupWidth) {
+                const maxColumns = Math.floor((availableWidth + padding) / (this.config.minGroupWidth + padding));
+                return Math.max(1, maxColumns);
+            }
+            
+            return requestedColumns;
+        }
+        
+        // Fallback to dynamic calculation
+        const groupWithPadding = this.config.groupWidth + this.config.groupPaddingX;
         const columns = Math.max(1, Math.floor((availableWidth + this.config.groupPaddingX) / groupWithPadding));
         
         return columns;
@@ -104,6 +146,14 @@ class LayoutEngine extends EventEmitter {
     calculateLayout() {
         const columns = this.calculateColumnsCount();
         const availableHeight = this.config.terminalHeight - this.config.inputFieldHeight;
+        
+        // Get settings-based values
+        const padding = this.getSettingOrDefault('layout.padding', this.config.groupPaddingX);
+        const rowSpacing = this.getSettingOrDefault('layout.rowSpacing', this.config.groupPaddingY);
+        
+        // Calculate dynamic group width based on columns
+        const totalPadding = (columns - 1) * padding;
+        const groupWidth = Math.floor((this.config.terminalWidth - totalPadding) / columns);
         
         // Initialize column heights
         const columnHeights = new Array(columns).fill(0);
@@ -125,20 +175,20 @@ class LayoutEngine extends EventEmitter {
             }
             
             // Place group in shortest column
-            const x = shortestColumn * (this.config.groupWidth + this.config.groupPaddingX);
+            const x = shortestColumn * (groupWidth + padding);
             const y = columnHeights[shortestColumn];
             
             const layoutGroup = {
                 ...group,
                 x,
                 y,
-                width: this.config.groupWidth,
+                width: groupWidth,
                 height: groupHeight,
                 column: shortestColumn
             };
             
             columnContents[shortestColumn].push(layoutGroup);
-            columnHeights[shortestColumn] += groupHeight + this.config.groupPaddingY;
+            columnHeights[shortestColumn] += groupHeight + rowSpacing;
         }
         
         // Flatten column contents
@@ -167,12 +217,6 @@ class LayoutEngine extends EventEmitter {
         return this.layout;
     }
 
-    // Update terminal dimensions
-    updateTerminalSize(width, height) {
-        this.config.terminalWidth = width;
-        this.config.terminalHeight = height;
-        this.calculateLayout();
-    }
 
     // Get group by ID
     getGroup(groupId) {
@@ -229,6 +273,41 @@ class LayoutEngine extends EventEmitter {
             }
         }
         return false;
+    }
+
+    // Apply new settings and recalculate layout
+    applySettings() {
+        this.calculateLayout();
+    }
+
+    // Methods for SetCommand integration
+    setColumns(columns) {
+        if (this.settings) {
+            this.settings.set('layout.columns', columns);
+        }
+        this.calculateLayout();
+    }
+
+    setPadding(padding) {
+        if (this.settings) {
+            this.settings.set('layout.padding', padding);
+        }
+        this.calculateLayout();
+    }
+
+    setRowSpacing(spacing) {
+        if (this.settings) {
+            this.settings.set('layout.rowSpacing', spacing);
+        }
+        this.calculateLayout();
+    }
+
+    // Update terminal size and emit resize event
+    updateTerminalSize(width, height) {
+        this.config.terminalWidth = width;
+        this.config.terminalHeight = height;
+        this.calculateLayout();
+        this.emit('resize', this.layout);
     }
 
     // Debug: Print layout info

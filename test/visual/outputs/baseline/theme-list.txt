@@ -1,0 +1,28 @@
+[INIT] Initializing ioBroker Dashboard...
+[AI] AI assistant enabled
+[CONFIG] User data directory: ~/.iobroker-dashboard-cli
+[THEME] Using default theme
+[SUCCESS] Connected
+[CONNECT] Connecting...
+[MCP] Connecting to MCP server at http://192.168.178.38:8082/kiwi/0/mcp...
+[MCP] Connected to MCP server
+[MCP] Discovered 25 MCP tools: [
+  'getAdapters',         'getRunningInstances',
+  'getState',            'setState',
+  'getStateBulk',        'describe',
+  'setStateBulk',        'createState',
+  'createScene',         'setObject',
+  'getObject',           'deleteObject',
+  'getAllRooms',         'getHistory',
+  'search',              'describeBulk',
+  'deleteItemFromIndex', 'mingoSearch',
+  'readDir',             'readFile',
+  'writeFile',           'fileExists',
+  'mkdir',               'renameFile',
+  'deleteFile'
+]
+[MCP] Failed to discover MCP capabilities: MCP error -32601: Method not found
+[CONFIG] Checking for existing configuration...
+[LOAD] Loading dashboard layout...
+[SUCCESS] Connected
+╭[Test Group]─────────────────────────────────────────────╮││╰─────────────────────────────────────────────────────────╯Test Gauge                                        N/A╭[Output]──────────────────────────────────────────────────────────────────────╮╰──────────────────────────────────────────────────────────────────────────────╯│ [OK] Connected to ioBroker                                                   ││ [INFO] [METADATA] Refreshed object metadata for 0/1 elements                 ││ [INFO] [METADATA] Refreshed object metadata for 0/1 elements                 ││ [INFO] [READY] Dashboard loaded! Type "/help" for commands.                  │╭──────────────────────────────────────────────────────────────────────────────╮│ [AI+/cmd] >                                                                  │╰──────────────────────────────────────────────────────────────────────────────╯╭[Output]──────────────────────────────────────────────────────────────────────╮╰──────────────────────────────────────────────────────────────────────────────╯│ [OK] Connected to ioBroker                                                   ││ [INFO] [METADATA] Refreshed object metadata for 0/1 elements                 ││ [INFO] [METADATA] Refreshed object metadata for 0/1 elements                 ││ [INFO] [READY] Dashboard loaded! Type "/help" for commands.                  ││ [AI+/cmd] >                                                                  │
