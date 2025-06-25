@@ -5,8 +5,8 @@
  * Run with: node test-themes.js
  */
 
-import { ThemeCommand } from './commands/theme-command.js';
-import { applyColorScheme, getAvailableSchemes, THEMES } from './colors.js';
+import { ThemeCommand } from '../commands/theme-command.js';
+import { applyColorScheme, getAvailableSchemes, THEMES } from '../colors.js';
 
 // Mock dashboard for testing
 const mockDashboard = {

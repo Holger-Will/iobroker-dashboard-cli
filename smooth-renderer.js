@@ -180,7 +180,7 @@ class SmoothRenderer {
         // Redraw right border if needed
         if (this.config.showBorders) {
             this.moveTo(group.x + group.width - 1, y);
-            this.writeText(colorize('│', THEMES.border));
+            this.writeText(colorize(THEMES.borderStyle.vertical, THEMES.border));
         }
     }
 

@@ -5,7 +5,7 @@
  * Run with: node test-base-command.js
  */
 
-import { BaseCommand } from './commands/base-command.js';
+import { BaseCommand } from '../commands/base-command.js';
 
 // Mock dashboard for testing
 const mockDashboard = {

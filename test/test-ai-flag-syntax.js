@@ -5,7 +5,7 @@
  * Run with: node test-ai-flag-syntax.js
  */
 
-import AIService from './ai-service.js';
+import AIService from '../ai-service.js';
 
 // Mock dashboard for testing
 const mockDashboard = {

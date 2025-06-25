@@ -1,4 +1,4 @@
-import IoBrokerClient from './iobroker-client.js';
+import IoBrokerClient from '../iobroker-client.js';
 
 // Test the ioBroker connection
 const client = new IoBrokerClient({

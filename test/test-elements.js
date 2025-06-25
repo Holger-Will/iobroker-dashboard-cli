@@ -1,7 +1,7 @@
-import IoBrokerClient from './iobroker-client.js';
-import LayoutEngine from './layout-engine.js';
-import SmoothRenderer from './smooth-renderer.js';
-import { createElement, createElements } from './dashboard-elements.js';
+import IoBrokerClient from '../iobroker-client.js';
+import LayoutEngine from '../layout-engine.js';
+import SmoothRenderer from '../smooth-renderer.js';
+import { createElement, createElements } from '../dashboard-elements.js';
 
 console.log('Creating ioBroker client...');
 const client = new IoBrokerClient({

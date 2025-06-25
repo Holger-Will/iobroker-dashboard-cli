@@ -5,7 +5,7 @@
  * Run with: node test-flag-parser.js
  */
 
-import { CommandFlagParser } from './command-flag-parser.js';
+import { CommandFlagParser } from '../command-flag-parser.js';
 
 class TestRunner {
     constructor() {

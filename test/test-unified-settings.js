@@ -5,7 +5,7 @@
  * Run with: node test-unified-settings.js
  */
 
-import { UnifiedSettingsManager } from './unified-settings-manager.js';
+import { UnifiedSettingsManager } from '../unified-settings-manager.js';
 import fs from 'fs/promises';
 import path from 'path';
 

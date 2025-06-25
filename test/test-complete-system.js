@@ -5,10 +5,10 @@
  * Run with: node test-complete-system.js
  */
 
-import { AddCommand } from './commands/add-command.js';
-import { ToggleModeCommand } from './commands/toggle-mode-command.js';
-import { ThemeCommand } from './commands/theme-command.js';
-import { getAvailableSchemes } from './colors.js';
+import { AddCommand } from '../commands/add-command.js';
+import { ToggleModeCommand } from '../commands/toggle-mode-command.js';
+import { ThemeCommand } from '../commands/theme-command.js';
+import { getAvailableSchemes } from '../colors.js';
 
 // Mock dashboard for testing
 const mockDashboard = {

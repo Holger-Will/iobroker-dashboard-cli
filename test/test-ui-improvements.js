@@ -5,7 +5,7 @@
  * Run with: node test-ui-improvements.js
  */
 
-import { ToggleModeCommand } from './commands/toggle-mode-command.js';
+import { ToggleModeCommand } from '../commands/toggle-mode-command.js';
 
 // Mock dashboard for testing
 const mockDashboard = {

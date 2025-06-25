@@ -1,7 +1,7 @@
-import LayoutEngine from './layout-engine.js';
-import ConfigManager from './config-manager.js';
-import DashboardTools from './dashboard-tools.js';
-import { createElements } from './dashboard-elements.js';
+import LayoutEngine from '../layout-engine.js';
+import ConfigManager from '../config-manager.js';
+import DashboardTools from '../dashboard-tools.js';
+import { createElements } from '../dashboard-elements.js';
 
 console.log('🔧 Testing Configuration Management System');
 

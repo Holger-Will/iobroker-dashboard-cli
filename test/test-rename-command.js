@@ -5,7 +5,7 @@
  * Run with: node test-rename-command.js
  */
 
-import { RenameCommand } from './commands/rename-command.js';
+import { RenameCommand } from '../commands/rename-command.js';
 
 // Mock dashboard with tools for testing
 const mockDashboard = {

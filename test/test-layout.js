@@ -1,5 +1,5 @@
-import LayoutEngine from './layout-engine.js';
-import TerminalRenderer from './terminal-renderer.js';
+import LayoutEngine from '../layout-engine.js';
+import TerminalRenderer from '../terminal-renderer.js';
 
 // Create layout engine
 const layout = new LayoutEngine({

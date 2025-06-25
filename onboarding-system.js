@@ -181,16 +181,16 @@ export class OnboardingSystem {
         this.dashboard.addMessage('What should be the default width for dashboard groups?', 'info');
         this.dashboard.addMessage('', 'info');
         this.dashboard.addMessage('Recommended widths:', 'info');
-        this.dashboard.addMessage('  • 35 - Standard (recommended)', 'info');
-        this.dashboard.addMessage('  • 40 - Wide (more space for long names)', 'info');
-        this.dashboard.addMessage('  • 30 - Compact (fits more groups)', 'info');
-        this.dashboard.addMessage('  • 50 - Extra wide (detailed displays)', 'info');
+        this.dashboard.addMessage('  • 59 - Standard (recommended for 240-char screens)', 'info');
+        this.dashboard.addMessage('  • 50 - Compact (fits more groups)', 'info');
+        this.dashboard.addMessage('  • 70 - Wide (more space for long names)', 'info');
+        this.dashboard.addMessage('  • 35 - Legacy (for smaller screens)', 'info');
         this.dashboard.addMessage('', 'info');
-        this.dashboard.addMessage('Enter width (or press Enter for 35):', 'warning');
+        this.dashboard.addMessage('Enter width (or press Enter for 59):', 'warning');
     }
 
     async handleGroupWidthInput(input) {
-        let width = 35; // default
+        let width = 59; // default
         
         if (input.trim()) {
             const num = parseInt(input);

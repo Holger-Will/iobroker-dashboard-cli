@@ -5,7 +5,7 @@
  * Run with: node test-onboarding-system.js
  */
 
-import { OnboardingSystem } from './onboarding-system.js';
+import { OnboardingSystem } from '../onboarding-system.js';
 
 // Mock dashboard for testing
 const mockDashboard = {

@@ -5,9 +5,9 @@
  * Run with: node test-universal-help.js
  */
 
-import { QuitCommand } from './commands/quit-command.js';
-import { StatusCommand } from './commands/status-command.js';
-import { AddCommand } from './commands/add-command.js';
+import { QuitCommand } from '../commands/quit-command.js';
+import { StatusCommand } from '../commands/status-command.js';
+import { AddCommand } from '../commands/add-command.js';
 
 // Mock dashboard for testing
 const mockDashboard = {

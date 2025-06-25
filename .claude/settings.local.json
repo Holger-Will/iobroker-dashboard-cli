@@ -9,7 +9,15 @@
       "Bash(rm:*)",
       "Bash(grep:*)",
       "Bash(timeout:*)",
-      "Bash(rg:*)"
+      "Bash(rg:*)",
+      "Bash(mkdir:*)",
+      "Bash(mv:*)",
+      "Bash(git rm:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run test:settings:*)",
+      "Bash(npm run test:commands:*)"
     ],
     "deny": []
   }

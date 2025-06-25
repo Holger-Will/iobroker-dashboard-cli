@@ -5,8 +5,8 @@
  * Run with: node test-add-command.js
  */
 
-import { AddCommand } from './commands/add-command.js';
-import { CommandFlagParser } from './command-flag-parser.js';
+import { AddCommand } from '../commands/add-command.js';
+import { CommandFlagParser } from '../command-flag-parser.js';
 
 // Mock dashboard for testing
 const mockDashboard = {

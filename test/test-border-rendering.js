@@ -5,7 +5,7 @@
  * Run with: node test-border-rendering.js
  */
 
-import SmoothRenderer from './smooth-renderer.js';
+import SmoothRenderer from '../smooth-renderer.js';
 
 // Mock layout object
 const mockLayout = {

@@ -9,6 +9,7 @@ import {
     exportCustomThemes,
     importCustomThemes
 } from '../colors.js';
+import { UnifiedSettingsManager } from '../unified-settings-manager.js';
 
 export class ThemeCommand extends BaseCommand {
     get name() {
@@ -135,13 +136,23 @@ export class ThemeCommand extends BaseCommand {
         if (success) {
             this.success(`[THEME] Applied theme: ${schemeName}`);
             
+            // Save theme selection persistently
+            try {
+                const settings = new UnifiedSettingsManager();
+                await settings.initialize();
+                await settings.set('theme.name', schemeName, true); // persistent=true
+                this.info(`[THEME] Saved theme selection: ${schemeName}`);
+            } catch (error) {
+                this.warning(`[THEME] Failed to save theme setting: ${error.message}`);
+            }
+            
             // Force complete re-render to apply new colors
             this.dashboard.renderer.initialized = false;
             this.dashboard.renderer.elementPositions.clear();
             
             this.render();
             
-            this.info('[TIP] Theme applied immediately. Colors will be visible on next render.');
+            this.info('[TIP] Theme applied immediately and saved for next startup.');
         } else {
             this.error(`Unknown theme: ${schemeName}`);
             this.info('Use /theme -l to see available themes');

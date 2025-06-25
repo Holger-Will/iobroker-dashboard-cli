@@ -9,7 +9,17 @@
   },
   "scripts": {
     "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha 'test/**/*.test.js' --recursive",
+    "test:unit": "mocha 'test/unit/**/*.test.js' --recursive",
+    "test:integration": "mocha 'test/integration/**/*.test.js' --recursive",
+    "test:watch": "mocha 'test/**/*.test.js' --recursive --watch",
+    "test:coverage": "nyc mocha 'test/**/*.test.js' --recursive",
+    "test:column-layout": "mocha 'test/unit/core/layout-engine.test.js'",
+    "test:settings": "mocha 'test/unit/core/unified-settings-manager.test.js'",
+    "test:commands": "mocha 'test/unit/commands/*.test.js'",
+    "test:visual": "mocha test/visual/terminal-output.test.js --timeout 60000",
+    "test:visual:update": "rm -rf test/visual/outputs/baseline && npm run test:visual",
+    "test:visual:diff": "diff -r test/visual/outputs/baseline test/visual/outputs/actual || true"
   },
   "keywords": [
     "iobroker",
@@ -24,5 +34,15 @@
     "clui": "^0.3.6",
     "dotenv": "^16.5.0",
     "socket.io-client": "^2.5.0"
+  },
+  "devDependencies": {
+    "chai": "^5.2.0",
+    "mocha": "^11.7.1",
+    "normalize-newline": "^4.1.0",
+    "nyc": "^17.1.0",
+    "sinon": "^21.0.0",
+    "sinon-chai": "^4.0.0",
+    "strip-ansi": "^7.1.0",
+    "tmp": "^0.2.3"
   }
 }

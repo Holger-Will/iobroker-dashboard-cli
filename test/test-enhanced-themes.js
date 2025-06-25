@@ -5,7 +5,7 @@
  * Run with: node test-enhanced-themes.js
  */
 
-import { ThemeCommand } from './commands/theme-command.js';
+import { ThemeCommand } from '../commands/theme-command.js';
 import { 
     applyTheme, 
     saveCurrentThemeAs, 

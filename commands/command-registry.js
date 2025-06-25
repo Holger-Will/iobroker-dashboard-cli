@@ -11,6 +11,8 @@ import ClearChatCommand from './clear-chat-command.js';
 import ToggleModeCommand from './toggle-mode-command.js';
 import ThemeCommand from './theme-command.js';
 import MoveCommand from './move-command.js';
+import HotkeyCommand from './hotkey-command.js';
+import { SetCommand } from './set-command.js';
 
 export class CommandRegistry {
     constructor(dashboard) {
@@ -27,6 +29,8 @@ export class CommandRegistry {
         this.register(new ToggleModeCommand(this.dashboard));
         this.register(new ThemeCommand(this.dashboard));
         this.register(new MoveCommand(this.dashboard));
+        this.register(new HotkeyCommand(this.dashboard));
+        this.register(new SetCommand(this.dashboard));
         
         // Register remaining commands
         this.register(new LsCommand(this.dashboard));
