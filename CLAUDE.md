@@ -9,7 +9,10 @@ This is a Node.js ESM CLI tool for ioBroker dashboard management. The project us
 ## Development Commands
 
 - `npm start` or `node index.js` - Start the dashboard application
-- `npm test` - No tests configured yet (placeholder script)
+- `npm test` - Run all tests (unit + integration + visual)
+- `npm run test:unit` - Run unit tests only
+- `npm run test:visual` - Run visual regression tests
+- `npm run test:settings` - Run settings manager tests
 - `npm install` - Install dependencies
 
 ## Main Entry Point
@@ -46,3 +49,42 @@ The project is currently minimal with only package.json and dependencies install
 - CLUI indicates rich terminal UI with progress bars, spinners, and interactive prompts
 - All JavaScript files will be treated as ES modules by default
 - Claude AI integration for intelligent dashboard management and automation
+
+## Test-Driven Development Workflow (MANDATORY)
+
+**CRITICAL**: From this point forward, ALL feature implementation MUST follow this exact workflow:
+
+### 1. CREATE TEST FIRST
+- Write a test that defines the desired behavior BEFORE implementing ANY feature
+- Test should fail initially (red)
+- Use appropriate test type: unit, integration, or visual regression
+
+### 2. IMPLEMENT FEATURE  
+- Write the minimum code to make the test pass
+- Focus on making the test green, not perfect code
+- Implement incrementally if the feature is complex
+
+### 3. RUN TEST
+- Verify the new test passes (`npm test`)
+- Ensure no existing tests break
+- Fix any regressions before proceeding
+
+### 4. GIT COMMIT
+- When feature or feature parts are complete and tested, immediately commit changes
+- Use descriptive commit messages explaining what was implemented
+- Include test results in commit message
+
+### 5. INCREMENTAL COMMITS
+- Commit frequently to enable rollback when something breaks
+- Each commit should represent a working, tested state
+- Never commit broken or untested code
+
+**Example workflow:**
+```bash
+# 1. Write test for /set command
+# 2. Implement SetCommand class
+# 3. npm run test:commands
+# 4. git add . && git commit -m "Implement /set command with validation tests"
+```
+
+This workflow is CRITICAL for code quality and rollback capability. Do NOT implement features without following this exact sequence.
