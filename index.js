@@ -1,8 +1,13 @@
 #!/usr/bin/env node
 
 import dotenv from 'dotenv';
+import os from 'os';
+import path from 'path';
 // Load environment variables first
 dotenv.config();
+
+// User data directory in user space
+const USER_DATA_DIR = path.join(os.homedir(), '.iobroker-dashboard-cli');
 
 import IoBrokerClient from './iobroker-client.js';
 import LayoutEngine from './layout-engine.js';
@@ -14,14 +19,17 @@ import CommandRegistry from './commands/command-registry.js';
 import AIService from './ai-service.js';
 import MCPClient from './mcp-client.js';
 import OnboardingSystem from './onboarding-system.js';
+import { UnifiedSettingsManager } from './unified-settings-manager.js';
+import { applyTheme } from './colors.js';
 
 class IobrkerDashboard {
     constructor(options = {}) {
         this.config = {
             iobrokerUrl: options.iobrokerUrl || 'http://192.168.178.38:8082',
-            configDir: options.configDir || './dashboard-configs',
+            configDir: options.configDir || path.join(USER_DATA_DIR, 'dashboard-configs'),
             defaultLayout: options.defaultLayout || 'default.json',
-            groupWidth: options.groupWidth || 35,
+            userDataDir: USER_DATA_DIR,
+            groupWidth: options.groupWidth || 59,
             groupPaddingX: options.groupPaddingX || 1,
             groupPaddingY: options.groupPaddingY || 1,
             ...options
@@ -104,10 +112,37 @@ class IobrkerDashboard {
         // Initialize config manager
         await this.configManager.initialize(this.layout);
 
+        // Load and apply saved theme
+        await this.initializeTheme();
+
         // Set up event handlers
         this.setupEventHandlers();
 
         console.log('[SUCCESS] Dashboard initialized');
+    }
+
+    async initializeTheme() {
+        try {
+            const settings = new UnifiedSettingsManager();
+            await settings.initialize();
+            
+            // Load saved theme or use default
+            const savedTheme = await settings.get('theme.name');
+            if (savedTheme && savedTheme !== 'default') {
+                const success = applyTheme(savedTheme);
+                if (success) {
+                    console.log(`[THEME] Loaded saved theme: ${savedTheme}`);
+                } else {
+                    console.log(`[THEME] Failed to load saved theme '${savedTheme}', using default`);
+                    applyTheme('default');
+                }
+            } else {
+                console.log('[THEME] Using default theme');
+            }
+        } catch (error) {
+            console.log(`[THEME] Failed to load theme settings: ${error.message}, using default`);
+            applyTheme('default');
+        }
     }
 
     setupEventHandlers() {
@@ -269,10 +304,21 @@ class IobrkerDashboard {
 
     async checkForExistingConfiguration() {
         try {
-            // Check for any dashboard files or settings
-            const result = await this.configManager.listConfigs();
-            if (result.success && result.configs.length > 0) {
-                return true;
+            const userDataDir = this.config.userDataDir;
+            const configDir = this.config.configDir;
+            
+            // Check if user data directory exists
+            const userDirExists = await this.directoryExists(userDataDir);
+            if (!userDirExists) return false;
+            
+            // Check if any dashboard configs exist
+            try {
+                const { readdir } = await import('fs/promises');
+                const configFiles = await readdir(configDir);
+                const dashboardFiles = configFiles.filter(f => f.endsWith('.json'));
+                if (dashboardFiles.length > 0) return true;
+            } catch (error) {
+                // Config directory doesn't exist yet
             }
             
             // Check for settings file or environment variables
@@ -281,6 +327,16 @@ class IobrkerDashboard {
             }
             
             return false;
+        } catch (error) {
+            return false; // First run
+        }
+    }
+
+    async directoryExists(dirPath) {
+        try {
+            const { stat } = await import('fs/promises');
+            const stats = await stat(dirPath);
+            return stats.isDirectory();
         } catch (error) {
             return false;
         }
@@ -706,24 +762,19 @@ class IobrkerDashboard {
     }
 
     async handleDashboardHotkey(key) {
-        // Map number keys to dashboard filenames
-        const dashboardMap = {
-            '1': 'dashboard1.json',
-            '2': 'dashboard2.json', 
-            '3': 'dashboard3.json',
-            '4': 'dashboard4.json',
-            '5': 'dashboard5.json',
-            '6': 'dashboard6.json',
-            '7': 'dashboard7.json',
-            '8': 'dashboard8.json',
-            '9': 'dashboard9.json',
-            '0': 'dashboard0.json'
-        };
-
-        const filename = dashboardMap[key];
-        if (!filename) return;
-
         try {
+            // Load hotkey assignments from settings
+            const settings = await this.configManager.loadSettings();
+            const hotkeys = settings.hotkeys || {};
+            
+            const filename = hotkeys[key];
+            if (!filename) {
+                this.addWarningMessage(`[HOTKEY] Alt+${key}: No dashboard assigned`);
+                this.addInfoMessage('[TIP] Use /hotkey -n ' + key + ' -f <filename> to assign a dashboard');
+                this.addInfoMessage('[TIP] Use /hotkey -l to see all assignments');
+                return;
+            }
+
             const loadResult = await this.configManager.load(filename);
             
             if (loadResult.success) {
@@ -739,10 +790,10 @@ class IobrkerDashboard {
                 this.addSuccessMessage(`[HOTKEY] Alt+${key}: Loaded "${filename}" (${this.layout.groups.length} groups, ${elementCount} elements)`);
             } else {
                 this.addWarningMessage(`[HOTKEY] Alt+${key}: Dashboard "${filename}" not found`);
-                this.addInfoMessage('[TIP] Create dashboards using /save -f <filename> or name them dashboard1.json - dashboard9.json');
+                this.addInfoMessage('[TIP] Use /hotkey -n ' + key + ' -f <filename> to reassign');
             }
         } catch (error) {
-            this.addErrorMessage(`[HOTKEY] Alt+${key}: Error loading "${filename}": ${error.message}`);
+            this.addErrorMessage(`[HOTKEY] Alt+${key}: Error: ${error.message}`);
         }
     }
 

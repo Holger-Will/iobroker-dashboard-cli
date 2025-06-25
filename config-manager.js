@@ -1,16 +1,21 @@
 import fs from 'fs/promises';
 import path from 'path';
+import os from 'os';
 import { EventEmitter } from 'events';
 import { createElement } from './dashboard-elements.js';
+
+// User data directory in user space
+const USER_DATA_DIR = path.join(os.homedir(), '.iobroker-dashboard-cli');
 
 class ConfigManager extends EventEmitter {
     constructor(options = {}) {
         super();
         
         this.config = {
-            configDir: options.configDir || './dashboard-configs',
+            configDir: options.configDir || path.join(USER_DATA_DIR, 'dashboard-configs'),
             defaultConfig: options.defaultConfig || 'default.json',
-            settingsFile: options.settingsFile || 'settings.json',
+            settingsFile: options.settingsFile || path.join(USER_DATA_DIR, 'settings.json'),
+            userDataDir: USER_DATA_DIR,
             autoSave: options.autoSave !== false, // default true
             autoSaveDelay: options.autoSaveDelay || 5000, // 5 seconds
             ...options
@@ -313,7 +318,7 @@ class ConfigManager extends EventEmitter {
 
     // Load application settings
     async loadSettings() {
-        const settingsPath = path.join(this.config.configDir, this.config.settingsFile);
+        const settingsPath = this.config.settingsFile; // Now a full path
         
         try {
             const data = await fs.readFile(settingsPath, 'utf8');
@@ -322,6 +327,7 @@ class ConfigManager extends EventEmitter {
             // Return default settings if file doesn't exist
             return {
                 lastUsedDashboard: this.config.defaultConfig,
+                hotkeys: {}, // Initialize empty hotkeys object
                 created: new Date().toISOString()
             };
         }
@@ -329,7 +335,7 @@ class ConfigManager extends EventEmitter {
 
     // Save application settings
     async saveSettings(settings) {
-        const settingsPath = path.join(this.config.configDir, this.config.settingsFile);
+        const settingsPath = this.config.settingsFile; // Now a full path
         
         try {
             settings.updated = new Date().toISOString();

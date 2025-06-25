@@ -15,19 +15,24 @@
 
 import fs from 'fs/promises';
 import path from 'path';
+import os from 'os';
 import { fileURLToPath } from 'url';
 import { EventEmitter } from 'events';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// User data directory in user space
+const USER_DATA_DIR = path.join(os.homedir(), '.iobroker-dashboard-cli');
+
 export class UnifiedSettingsManager extends EventEmitter {
     constructor(options = {}) {
         super();
         
         this.envFile = options.envFile || path.join(__dirname, '.env');
-        this.settingsFile = options.settingsFile || path.join(__dirname, 'settings.json');
-        this.configDir = options.configDir || path.join(__dirname, 'dashboard-configs');
+        this.settingsFile = options.settingsFile || path.join(USER_DATA_DIR, 'settings.json');
+        this.configDir = options.configDir || path.join(USER_DATA_DIR, 'dashboard-configs');
+        this.userDataDir = USER_DATA_DIR;
         
         // Layered configuration: env < settings < runtime
         this.envConfig = new Map();
@@ -40,9 +45,9 @@ export class UnifiedSettingsManager extends EventEmitter {
             ['iobroker.namespace', 'admin'],
             ['mcp.server_url', 'http://192.168.178.38:8082/mcp'],
             ['dashboard.auto_save', true],
-            ['dashboard.config_dir', './dashboard-configs'],
+            ['dashboard.config_dir', path.join(USER_DATA_DIR, 'dashboard-configs')],
             ['dashboard.default_layout', 'default.json'],
-            ['dashboard.group_width', 35],
+            ['dashboard.group_width', 59],
             ['dashboard.group_padding_x', 1],
             ['dashboard.group_padding_y', 1],
             ['theme.name', 'default'],
@@ -78,12 +83,39 @@ export class UnifiedSettingsManager extends EventEmitter {
         if (this.initialized) return;
         
         try {
+            // Ensure user data directory exists
+            await this.ensureUserDataDirectory();
+            
             await this.loadEnvConfig();
             await this.loadPersistentConfig();
             this.initialized = true;
             this.emit('initialized');
         } catch (error) {
             this.emit('error', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Ensure user data directory structure exists
+     */
+    async ensureUserDataDirectory() {
+        try {
+            // Create base user data directory
+            await fs.mkdir(this.userDataDir, { recursive: true });
+            
+            // Create subdirectories
+            await fs.mkdir(this.configDir, { recursive: true });
+            
+            const logsDir = path.join(this.userDataDir, 'logs');
+            await fs.mkdir(logsDir, { recursive: true });
+            
+            const cacheDir = path.join(this.userDataDir, 'cache');
+            await fs.mkdir(cacheDir, { recursive: true });
+            
+            console.log(`[CONFIG] User data directory: ${this.userDataDir}`);
+        } catch (error) {
+            console.error(`Failed to create user data directory: ${error.message}`);
             throw error;
         }
     }

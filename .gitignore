@@ -35,5 +35,8 @@ Thumbs.db
 *.swo
 *~
 
-# Dashboard configs (optional - remove if you want to commit them)
-# dashboard-configs/*.json
+# User dashboard configurations (generated during onboarding)
+dashboard-configs/
+
+# User settings file (contains personal data like API keys)
+settings.json
