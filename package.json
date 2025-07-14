@@ -42,7 +42,7 @@
     "socket.io-client": "^2.5.0"
   },
   "devDependencies": {
-    "chai": "^5.2.0",
+    "chai": "^5.2.1",
     "mocha": "^11.7.1",
     "normalize-newline": "^4.1.0",
     "nyc": "^17.1.0",
